@@ -302,12 +302,28 @@ movq r11,(r10)        FFFF------------XM     -- depend(X,r10), depend(M,r11)
 addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
 </code></pre>
 
+<ul>
+<li>
 <ol>
 <li>instruktion kan starte indhentning som normalt. Hvis vi tæller antallet af streger over dette <code>F</code> (hold tungen lige i munden) tæller vi 8, som er plads til. I den efterfølgende periode (nummer 5) fortsætter først instruktion til <code>X</code>, så denne instruktion kan fortsætte sin indlæsning. Så skal vi bare huske vores afhængighed på <code>r10</code>.</li>
+</ol>
+</li>
+<li>
+<ol>
 <li>instruktion kan starte indhentning med den tidligere. Men nu er de anonyme faser fulde og vi bliver nødt til at blive i <code>F</code>. Afslutningen følger de tidligere iterationer.</li>
+</ol>
+</li>
+<li>
+<ol>
 <li>Vi han starte indlæsningen i periode 5, men er igen nødt til at stalle i <code>F</code>.</li>
+</ol>
+</li>
+<li>
+<ol>
 <li>Nu er <code>F</code> også blevet fyldt og vi er nødt til forsinke selve indlæsningen. Det er først i periode 9 at anden instruktion komme ud af sin indlæsning og vi kan derfor starte denne.</li>
 </ol>
+</li>
+</ul>
 <p>Det man især kan tage med fra ovenstående eksempel, er hvor mange instruktioner, som er i gang med at blive indlæst og hvor lang tid denne del tager sammenlignet med selve beregningen.</p>
 <h2 id="ker">Køer</h2>
 <p>TBD</p>
