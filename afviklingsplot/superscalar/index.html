@@ -82,6 +82,8 @@
         
             <li><a class="toctree-l4" href="#eksempel-superskalar">Eksempel: Superskalar</a></li>
         
+            <li><a class="toctree-l4" href="#eksempel-2-kontrolafhngighed">Eksempel 2: Kontrolafhængighed</a></li>
+        
         </ul>
     
 
@@ -89,7 +91,7 @@
                 </li>
                 <li class="">
                     
-    <a class="" href="../anonyme/">Anonyme Faser</a>
+    <a class="" href="../anonyme/">Avanceret pipeline, anonyme faser</a>
                 </li>
                 <li class="">
                     
@@ -171,13 +173,13 @@ registerfilen.</p>
 <td>Aritmetik</td>
 <td><code>op  a b</code></td>
 <td><code>FDXW</code></td>
-<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
+<td><code>depend(X,a), depend(X,b), produce(M,b)</code></td>
 </tr>
 <tr>
 <td>Læsning</td>
 <td><code>movq (a),b</code></td>
 <td><code>FDXMW</code></td>
-<td><code>depend(X,a), produce(M,b)</code></td>
+<td><code>depend(X,a), produce(W,b)</code></td>
 </tr>
 <tr>
 <td>Skrivning</td>
@@ -188,9 +190,9 @@ registerfilen.</p>
 </tbody>
 </table>
 <p>Overvej afviklingen af følgende program:</p>
-<pre><code>                 012345678      -- Vigtige dataafhængigheder
-movq (r10),r11   FDXMW          -- produce(M,r11)
-addq $100,r11    FDDDXW         -- depend(X,r11), produce(X,r11)
+<pre><code class="text">                 012345678      -- Vigtige dataafhængigheder
+movq (r10),r11   FDXMW          -- produce(W,r11)
+addq $100,r11    FDDDXW         -- depend(X,r11), produce(M,r11)
 movq r11,(r10)    FDDXM         -- depend(M,r11)
 subq $8,r10       FFFDXW        --
 </code></pre>
@@ -204,6 +206,7 @@ subq $8,r10       FFFDXW        --
 <li>periode og frem forløber som forventet.</li>
 </ol>
 <p>Hvis vi igen kigger på søjlerne i plottet, har ingen af disse flere forekomster af faserne end vi har ressourcer  til rådighed. Der er altså højst 2 <code>F</code>'er, <code>D</code>'er osv., men kun højest et <code>M</code>. Dertil ser vi at søjlerne oppefra lister faserne bagfra og vi ved derfor at disse bliver udført in-order.</p>
+<h2 id="eksempel-2-kontrolafhngighed">Eksempel 2: Kontrolafhængighed</h2>
 <p>&nbsp;</p>
               
             </div>
@@ -212,7 +215,7 @@ subq $8,r10       FFFDXW        --
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../anonyme/" class="btn btn-neutral float-right" title="Anonyme Faser">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../anonyme/" class="btn btn-neutral float-right" title="Avanceret pipeline, anonyme faser">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../pipeline/" class="btn btn-neutral" title="Simpel pipeline"><span class="icon icon-circle-arrow-left"></span> Previous</a>

@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Anonyme Faser - x86prime</title>
+  <title>Avanceret pipeline, anonyme faser - x86prime</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Anonyme Faser";
+    var mkdocs_page_name = "Avanceret pipeline, anonyme faser";
     var mkdocs_page_input_path = "afviklingsplot/anonyme.md";
     var mkdocs_page_url = null;
   </script>
@@ -77,16 +77,20 @@
                 </li>
                 <li class=" current">
                     
-    <a class="current" href="./">Anonyme Faser</a>
+    <a class="current" href="./">Avanceret pipeline, anonyme faser</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#anonyme-faser">Anonyme faser</a></li>
+    <li class="toctree-l3"><a href="#avanceret-pipeline-anonyme-faser">Avanceret pipeline, anonyme faser</a></li>
     
         <ul>
         
             <li><a class="toctree-l4" href="#lngere-pipelines">Længere pipelines</a></li>
         
-            <li><a class="toctree-l4" href="#abstraktion">Abstraktion</a></li>
+            <li><a class="toctree-l4" href="#eksempel-1-avanceret-pipeline">Eksempel 1: Avanceret pipeline</a></li>
+        
+            <li><a class="toctree-l4" href="#abstraktion-samlet-indlsning-afkodning">Abstraktion, samlet indlæsning afkodning</a></li>
+        
+            <li><a class="toctree-l4" href="#eksempel-2-mere-udrulning">Eksempel 2: Mere udrulning</a></li>
         
             <li><a class="toctree-l4" href="#ker">Køer</a></li>
         
@@ -134,7 +138,7 @@
         
       
     
-    <li>Anonyme Faser</li>
+    <li>Avanceret pipeline, anonyme faser</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -144,93 +148,167 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="anonyme-faser">Anonyme faser</h1>
+                <h1 id="avanceret-pipeline-anonyme-faser">Avanceret pipeline, anonyme faser</h1>
 <p>Det er lidt træls, hvis man skal redegøre separat for hver enkelt fase en instruktion
 gennemløber i en moderne mikroarkitektur. Det skyldes at moderne mikroarkitekturer
-afvikler instruktioner i mange forskellige faser.</p>
+afvikler instruktioner i mange forskellige faser og disse faser kan tage forskellig længde.</p>
 <h2 id="lngere-pipelines">Længere pipelines</h2>
 <p>I moderne CMOS er det ikke realistisk at lave et cache-opslag på en enkelt cyklus.
-Typisk bruges tre cykler, fuldt pipelinet. Oftest er det heller ikke muligt at
+Typisk bruges tre cykler, som er fuldt pipelinet. Oftest er det heller ikke muligt at
 fuldt afkode en instruktion på en enkelt cyklus.</p>
-<p>Vi kunne navngive hver enkelt af de ekstra faser der kræves og opskrive regler
-for hver af dem. Vi vælger en simplere notation: Når vi opskriver faserne for
-en instruktionsklasse kan vi</p>
+<p>For eksempel, i den simple pipeline ventede (stall) vi på at en load instruktion var helt færdig med <code>M</code> fasen før den næste instruktion gik i gang, med denne fase. I en moderne mikroarkitekturer kan vi have flere instruktioner, som er i gang med at læse eller skrive.</p>
+<p>Vi kunne løse dette ved at navngive hver enkelt af de ekstra faser der kræves og opskrive regler for hver af dem. Det bliver dog hurtigt meget kompliceret og bliver umuligt at overskue hvis vi pludselig skal holde styr på 3 forskellige navne for dele indhentning, 2 for afkodning, 3 for cache adgang osv. Det varer ikke længe før vi løber tør for bogstaver.</p>
+<p>I stedet vælger vi en simplere notation. Når vi opskriver faserne for en instruktionsklasse kan vi</p>
 <ul>
-<li>tilføje anonyme faser som er påkrævet med <code>-</code> og</li>
+<li>tilføje de ekstra <strong>anonyme</strong> faser som er påkrævet med <code>-</code> og</li>
 <li>angive hvor mange instruktioner der kan befinde sig i "mellemrummet" mellem
   to navngivne faser.</li>
 </ul>
-<p>Man kan vælge at betragte tidligere beskrivelser af begrænsinger som specialtilfælde,
+<p>Vi kan betragte tidligere beskrivelser af begrænsninger som specialtilfælde,
 hvor <em>ingen</em> instruktioner må være i anonyme faser, dvs: <code>F-D: 0</code>, <code>D-X: 0</code>, <code>X-M: 0</code>, <code>M-W: 0</code>.
-Her betyder såleds "<code>F-D: 0</code>" at der ingen instruktioner må være, som har gennemført fase
+Her forstås såleds at "<code>F-D: 0</code>" at der ingen instruktioner må være, som har gennemført fase
 F, men ikke påbegyndt D. Med andre ord: Fase <code>D</code> skal følge direkte efter fase <code>F</code> i afviklingsplottet</p>
-<p>For eksempel:</p>
-<pre><code>resC: max pr clk: F-D: 4, D-X: 2, M-W: 2
+<h2 id="eksempel-1-avanceret-pipeline">Eksempel 1: Avanceret pipeline</h2>
+<p>Lad os nu definerer en mere avanceret (og realistisk) mikroarkitektur. Lad os først fastsætte begrænsningerne på vores instruktioner</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>F--D-XW</code></td>
+<td><code>depend(X,a), depend(X,b), produce(W,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>F--D-XM--W</code></td>
+<td><code>depend(X,a), produce(W,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>F--D-XM</code></td>
+<td><code>depend(X,a), depend(M,b)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Dataafhængighederne er de samme som tidligere, men den undtagelse at aritmetik instruktionerne, nu ikke har en <code>M</code> fase og derfor producerer deres resultat til fase <code>W</code>.
+Det ses af faserne. Her har vi indsat to anonyme faser <code>-</code> efter <code>F</code> og <code>M</code> for at definerer cache adgang tager i alt 3 clock perioder. På samme måde kan vi se at afkodningen i <code>D</code> nu tager 2 clock perioder. Vi kan stadig lave stalls in disse anonyme faser, så det er muligt at der er flere end antallet mellem to givne faser.</p>
+<p>Vi kan nu sætte de udvidede specifikationer for faserne som</p>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:2</code>, <code>D:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
+<li>Antal instruktioner underberegning: <code>F-D: 4</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
+<li><code>inorder(F,D,X,M,W)</code></li>
+</ul>
+<p>Vi har det samme antal ressourcer som i vores superskalar arkitektur, men kan nu have 4 ekstra instruktioner i de anonyme faser mellem <code>F</code> og <code>D</code>; altså i gang med at blive indhentet. Der er 2 ekstra mellem <code>D</code> og <code>X</code>, samt 2 ekstra mellem <code>M</code> og <code>W</code>. Det er implicit at der ikke kan være nogen mellem <code>X</code> og <code>M</code> da det her kun tager en clock periode at beregne en værdi.
+Vi sikre stadig at alle faser afvikles in-order.</p>
+<p>Se følgende eksempel på en kørsel af et program; læg mærke til at vi har to iterationer at en opdatering at et array:</p>
+<pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
+movq (r10),r11   F--D-XM--W            -- produce(W,r11)
+addq $100,r11    F--D-----XW           -- depend(X,r11), produce(W,r11)
+movq r11,(r10)    F--D----XM           -- depend(M,r11), depend(M,r11)
+addq $8,r10       F--DDDDD-XW          -- produce(W,r10)
+movq (r10),r11     F--DDDD--XM--W      -- depend(X,r10), produce(W,r11)
+addq $100,r11      F------D-----XW     -- depend(X,r11), produce(W,r11)
+movq r11,(r10)      F-----DD----XM     -- depend(X,r10), depend(M,r11)
+addq $8,r10         F------DDDDD-XW    -- depend(X,r10), produce(W,r10)
 </code></pre>
 
-<p>Angiver fire ekstra instruktioner mellem <code>F</code> og <code>D</code>, 2 ekstra mellem <code>D</code> og <code>X</code> og to ekstra
-mellem <code>M</code> og <code>W</code>.</p>
-<p>Så vi i alt har:</p>
-<pre><code>aritmetik:  F--D-XW
-movq (a),b: F--D-XM--W
-movq b,(a): F--D-XM
-
-dataafhængigheder:
-aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
-movq (a),b: X.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
-movq b,(a): X.time &gt;= a.time, M.time &gt;= b.time; MEM[a].time = S.time + 3
-
-inorder(F,D,X,M,W)
-resB: max pr clk: F:2, D:2, X:2, M:1, W:2
-resC: max pr clk: F-D: 4, D-X: 2, M-W: 2
-</code></pre>
-
-<p>Hvilket giver følgende afvikling</p>
-<pre><code>                 012345678901234567
-movq (r10),r11   F--D-XM--W            r11.time = 9
-addq $100,r11    F--D-----XW           X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 10
-movq r11,(r10)    F--D----XM           X.time &gt;= r10.time, M.time &gt;= r11.time
-addq $8,r10       F--DDDDD-XW          r10.time = 11
-movq (r10),r11     F--DDDD--XM--W      X.time &gt;= r10.time, r11.time = 15
-addq $100,r11      F------D-----XW     X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 16
-movq r11,(r10)      F-----DD----XM     X.time &gt;= r10.time, M.time &gt;= r11.time
-addq $8,r10         F------DDDDD-XW    r10.time = 17
-</code></pre>
-
-<p>Vores specifikation kan kræve anonyme faser, f.eks. to mellem <code>F</code> og <code>D</code> som ovenfor,
-men vi kan også indsætte yderligere anonyme faser i afviklingsplottet for at
-få afviklingen til at overholde andre begrænsninger.</p>
-<h2 id="abstraktion">Abstraktion</h2>
-<p>Anonyme faser gør det nemmere at se bort fra ting der ikke har interesse.
-For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, men få samme afvikling:</p>
-<pre><code>aritmetik:  F----XW
-movq (a),b: F----XM--W
-movq b,(a): F----XM
-
-dataafhængigheder:
-aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
-movq (a),b: X.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
-movq b,(a): X.time &gt;= a.time, M.time &gt;= b.time; MEM[a].time = S.time + 3
-
-inorder(F,X,M,W)
-resB: max pr clk: F:2, X:2, M:1, W:2
-resC: max pr clk: F-X: 8, M-W: 2
-</code></pre>
-
-<p>Hvilket giver den samme afvikling, blot er <code>D</code> ikke nævnt.</p>
-<pre><code>                 012345678901234567
-movq (r10),r11   F----XM--W            r11.time = 9
-addq $100,r11    F--------XW           X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 10
-movq r11,(r10)    F-------XM           X.time &gt;= r10.time, M.time &gt;= r11.time
-addq $8,r10       F--------XW          r10.time = 11
-movq (r10),r11     F--------XM--W      X.time &gt;= r10.time, r11.time = 15
-addq $100,r11      F------------XW     X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 16
-movq r11,(r10)      F-----------XM     X.time &gt;= r10.time, M.time &gt;= r11.time
-addq $8,r10         F------------XW    r10.time = 17
+<p>Nu begynder der at ske en del. </p>
+<ol>
+<li>instruktion forløber normalt, da vi har en "tom" pipeline; dog bør noteres at værdien fra læsning først er klar i fase <code>W</code></li>
+<li>instruktion kan indlæses og afkodes samtidig med den første; vi har to enheder. Dog er den afhængig af at <code>r11</code> er klar i <code>X</code>, så denne fase kan tidligst være samtidig med <code>W</code> fra første instruktion. Vi laver altså en stall i den anonyme afkodningsfase.</li>
+<li>instruktion kan indlæses i anden fra anden periode og afkodning kan gå i gang som normalt. Vi har dog damme afhængighed som før of er nødt til at stall i <code>D</code>'s <code>-</code>.</li>
+<li>instruktion kan begynde indlæsning og afkodning samtidig med den tidligere. Vi har dog allerede fyldt anden del af <code>D</code>, så vi staller denne i <code>D</code>; se at der allerede er to streger i søjlen over efter <code>D</code>. Afhængigheden på <code>r10</code> er endnu ikke noget problem, men vi noterer at den opdaterer <code>r10</code> i <code>W</code> fasen.</li>
+<li>instruktion og vi starter anden iteration. Vi kan begynde indlæsningen som forventet, men er igen nødt til at stalle i <code>D</code> til vi har plads til at afkode. Vi har derefter en afhængighed på <code>r10</code> i <code>X</code> fasen, som vi så er nødt til at stalle en enkelt clock periode. Resten forløber som forventet, men indlæsning til <code>r11</code> er først klar til <code>W</code>.</li>
+<li>instruktion er vi nu nødt til at stalle i indlæsningen, <code>F</code>, da der ikke er plads i afkodningen. Derefter er vi igen nødt til at stalle efter <code>D</code> for at vente på vores afhængighed på <code>r11</code>; <code>X</code> kan ikke ligge tidligere en samtidig med <code>W</code> fra før.</li>
+<li>instruktion er igen en masse stall efter <code>F</code> og derefter <code>D</code>. Vi har først en afhængig på <code>r10</code> i <code>X</code> som kommer fra fjerde instruktion; vi har dog en in-order maskine og kan derfor ikke ligge adresseberegningen tidligere end <code>X</code> fra den forrige instruktion. Dette løser også afhængigheden på <code>r11</code> i <code>M</code>, da denne bliver produceret i forrige instruktions <code>W</code>.</li>
+<li>instruktion forsinkes både i <code>F</code> og <code>D</code>, som tidligere. Ellers er der ikke noget at bemærke.</li>
+</ol>
+<h2 id="abstraktion-samlet-indlsning-afkodning">Abstraktion, samlet indlæsning afkodning</h2>
+<p>Anonyme faser også gøre det nemmere at se bort fra ting der ikke har interesse.
+For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, da det altid følger direkte efter indhentning og har samme antal ressourcer. I stedet kan vi lave vores indlæsningstrin det længere og få samme afvikling:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>F----XW</code></td>
+<td><code>depend(X,a), depend(X,b), produce(W,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>F----XM--W</code></td>
+<td><code>depend(X,a), produce(W,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>F----XM</code></td>
+<td><code>depend(X,a), depend(M,b)</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
+<li>Antal instruktioner underberegning: <code>F-X: 8</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
+<li><code>inorder(F,D,X,M,W)</code></li>
+</ul>
+<p>Dette giver den samme afvikling, blot er <code>D</code> ikke nævnt, men til gængæld kan det være mere overskueligt.</p>
+<pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
+movq (r10),r11   F----XM--W            -- produce(W,r11)
+addq $100,r11    F--------XW           -- depend(X,r11), produce(W,r11)
+movq r11,(r10)    F-------XM           -- depend(M,r11), depend(M,r11)
+addq $8,r10       F--------XW          -- produce(W,r10)
+movq (r10),r11     F--------XM--W      -- depend(X,r10), produce(W,r11)
+addq $100,r11      F------------XW     -- depend(X,r11), produce(W,r11)
+movq r11,(r10)      F-----------XM     -- depend(X,r10), depend(M,r11)
+addq $8,r10         F------------XW    -- depend(X,r10), produce(W,r10)
 </code></pre>
 
 <p>Bemærk iøvrigt at selvom denne maskine kan håndtere 2 instruktioner per clk, så
-opnår den i ovenstående eksempel 8/11 IPC, dvs mindre end 1 instruktion per clk.</p>
+opnår den i ovenstående eksempel 8/11 IPC, dvs. mindre end 1 instruktion per clk.</p>
+<h2 id="eksempel-2-mere-udrulning">Eksempel 2: Mere udrulning</h2>
+<p>Det ligning at vi nu bare kan indhente instruktioner, som vi lyster. Så når vi nu er så godt i gang kan vi tage en udrulning mere.</p>
+<pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
+movq (r10),r11   F----XM--W            -- produce(W,r11)
+addq $100,r11    F--------XW           -- depend(X,r11), produce(W,r11)
+movq r11,(r10)    F-------XM           -- depend(M,r11), depend(M,r11)
+addq $8,r10       F--------XW          -- produce(W,r10)
+movq (r10),r11     F--------XM--W      -- depend(X,r10), produce(W,r11)
+addq $100,r11      F------------XW     -- depend(X,r11), produce(W,r11)
+movq r11,(r10)      F-----------XM     -- depend(X,r10), depend(M,r11)
+addq $8,r10         F------------XW    -- depend(X,r10), produce(W,r10)
+movq (r10),r11       F------------XM--W      -- depend(X,r10), produce(W,r11)
+addq $100,r11        FFFFF------------XW     -- depend(X,r11), produce(W,r11)
+movq r11,(r10)        FFFF------------XM     -- depend(X,r10), depend(M,r11)
+addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
+</code></pre>
+
+<ol>
+<li>instruktion kan starte indhentning som normalt. Hvis vi tæller antallet af streger over dette <code>F</code> (hold tungen lige i munden) tæller vi 8, som er plads til. I den efterfølgende periode (nummer 5) fortsætter først instruktion til <code>X</code>, så denne instruktion kan fortsætte sin indlæsning. Så skal vi bare huske vores afhængighed på <code>r10</code>.</li>
+<li>instruktion kan starte indhentning med den tidligere. Men nu er de anonyme faser fulde og vi bliver nødt til at blive i <code>F</code>. Afslutningen følger de tidligere iterationer.</li>
+<li>Vi han starte indlæsningen i periode 5, men er igen nødt til at stalle i <code>F</code>.</li>
+<li>Nu er <code>F</code> også blevet fyldt og vi er nødt til forsinke selve indlæsningen. Det er først i periode 9 at anden instruktion komme ud af sin indlæsning og vi kan derfor starte denne.</li>
+</ol>
+<p>Det man især kan tage med fra ovenstående eksempel, er hvor mange instruktioner, som er i gang med at blive indlæst og hvor lang tid denne del tager sammenlignet med selve beregningen.</p>
 <h2 id="ker">Køer</h2>
 <p>TBD</p>
 <h2 id="cache-miss">Cache-miss</h2>

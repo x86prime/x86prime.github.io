@@ -102,7 +102,7 @@
     <li class="toctree-l3"><a href="#in-order-udfrsel-af-instruktioner">In-order udførsel af instruktioner</a></li>
     
 
-    <li class="toctree-l3"><a href="#kontrol-afhngigheder">Kontrol afhængigheder</a></li>
+    <li class="toctree-l3"><a href="#kontrolafhngigheder">Kontrolafhængigheder</a></li>
     
 
     </ul>
@@ -113,7 +113,7 @@
                 </li>
                 <li class="">
                     
-    <a class="" href="../anonyme/">Anonyme Faser</a>
+    <a class="" href="../anonyme/">Avanceret pipeline, anonyme faser</a>
                 </li>
                 <li class="">
                     
@@ -179,7 +179,7 @@ maskiner konstrueret i 80'erne. Her er der fem faser:</p>
 <li>Alle instruktioner gennemløber: <code>FDXMW</code></li>
 <li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
 </ul>
-<p>Ovenstående skal læses som: alle instruktioner passerer gennem samtlige fem trin ordnet som beskrevet; det findes en ressource for hvert trin, altså der kan kun være en instruktion i hver trin.</p>
+<p>Ovenstående skal læses som: alle instruktioner passerer gennem samtlige fem trin ordnet som beskrevet; der findes en ressource for hvert trin, altså der kan kun være en instruktion i hver trin.</p>
 <p>Bemærk at det er en voldsom forenkling at udtrykke begrænsningen for
 instruktionshentning i et antal instruktioner. Især hvis instruktionen kommer til at ligge over to cache linier. For en maskine med instruktioner
 af forskellig længde er bindingen mere korrekt udtrykt som et antal bytes.
@@ -187,7 +187,7 @@ Først i forbindelse med afkodning er det klart, hvor en instruktion begynder
 og slutter. Den lille detalje vil vi se bort fra.</p>
 <h3 id="eksempel-simpel-pipeline-mikroarkitektur">Eksempel: Simpel pipeline mikroarkitektur</h3>
 <p>For eksempel vil afviklingsplottet for et mindre udvidet eksempel program, vil være følgende:</p>
-<pre><code>                 012345678
+<pre><code class="text">                 012345678
 movq (r10),r11   FDXMW
 mulq r10,r12      FDXMW
 addq $100,r13      FDXMW
@@ -215,7 +215,7 @@ end addition og har derfor en latenstid på 3-4 clock perioder.</p>
 <p>Tilgang til lageret er også mere kompliceret og tager længere tid end en
 enkelt clock periode.</p>
 <h3 id="eksempel-latenstid">Eksempel: Latenstid</h3>
-<p>Lad os undersøge en pipeline maskine og definerer latenstiden i clock perioder (delay) for instruktionerne som:</p>
+<p>Lad os undersøge en pipelinet maskine og definere latenstiden i clock perioder (delay) for instruktionerne som:</p>
 <ul>
 <li>Simpel aritmetik <code>op  a b</code>:    <code>delay(X)=1</code></li>
 <li>Multiplikation   <code>mul a b</code>:    <code>delay(X)=4</code></li>
@@ -229,7 +229,7 @@ enkelt clock periode.</p>
 <li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
 </ul>
 <p>Det tidligere eksempel, vil nu blive</p>
-<pre><code>                           111
+<pre><code class="text">                           111
                  0123456789012
 movq (r10),r11   FDXMMW
 mulq r10,r12      FDXXXXMW
@@ -246,11 +246,11 @@ subq $1,r10             FDXXMW
 <li>alle linier i plottet indeholder alle fem trin mindst en gang, og</li>
 <li>hver søjle (clock periode) kun indeholder hvert trin en gang.</li>
 </ul>
-<p>Vi kan igen prøver at udregne ydeevnen for programmet og se at det samlet bruger 13 clock perioder. Igen bliver det flere perioder hvis vi sammenligner med den simple pipeline, men igen kan vi forvente en lavere clock periode.</p>
+<p>Vi kan igen prøver at udregne ydeevnen for programmet og se at det samlet bruger 13 clock perioder. Igen bliver det flere perioder hvis vi sammenligner med den simple pipeline, men igen kan vi forvente en kortere clock periode.</p>
 <h2 id="data-afhngigheder-og-forwarding">Data afhængigheder og forwarding</h2>
 <p>Mere signifikant end latenstiden er data afhængigheder. Det har ikke været et problem i vores tidligere eksempler (ikke en tilfældighed), men kan hurtigt blive det for normale programmer.</p>
 <p>Overvej følgende program:</p>
-<pre><code>movq (r10),r11
+<pre><code class="text">movq (r10),r11
 addq $100,r11
 movq r11,(r10)
 addq $8,r10
@@ -272,8 +272,8 @@ subq $1,r12
 
 </code></pre>
 
-<p>Hvis vi laver et simple afviklingsplot som før, vil vi få følgende:</p>
-<pre><code>movq (r10),r11  FDXMMW
+<p>Hvis vi laver et simpelt afviklingsplot som før, vil vi få følgende:</p>
+<pre><code class="text">movq (r10),r11  FDXMMW
 addq $100,r11    FDXXMW
 movq r11,(r10)    FDDXMMW
 addq $8,r10        FDDXXMW
@@ -281,20 +281,20 @@ subq $1,r12         FFDDXMW
 (OVENSTÅENDE VIRKER IKKE)
 </code></pre>
 
-<p>Ud over den tydelige tekst, som indikerer det, kan vi overbevise os selv om at ovenstående ikke virker. Vi har en data afhængighed mellem læsningen og først addition og vi ved fra ovenstående den tidligere uformelle beskrivelse at læsning fra hukommelse sker i <code>M</code>fasen. Men i plottet laver vi additionen i <code>X</code> samtidig med <code>M</code>; altså før vi har værdien til rådighed.</p>
+<p>Ud over den tydelige tekst, som indikerer det, kan vi overbevise os selv om at ovenstående ikke virker. Vi har en data afhængighed mellem læsningen og først addition og vi ved fra den tidligere uformelle beskrivelse at læsning fra hukommelse sker i <code>M</code>fasen. Men i plottet laver vi additionen i <code>X</code> samtidig med <code>M</code>; altså før vi har værdien til rådighed.</p>
 <p>For at undgå dette er vi nødt til at tilføje afhængighederne til vores instruktioner. Det kan vi skrive på følgende måde:</p>
 <ul>
-<li>Aritmetik   <code>op  a b</code>:    <code>depend(X,a), depend(X,b), produce(X,b)</code></li>
-<li>Læsning     <code>movq (a),b</code>: <code>depend(X,a), produce(M,b)</code></li>
+<li>Aritmetik   <code>op  a b</code>:    <code>depend(X,a), depend(X,b), produce(M,b)</code></li>
+<li>Læsning     <code>movq (a),b</code>: <code>depend(X,a), produce(W,b)</code></li>
 <li>Skrivning   <code>movq b,(a)</code>: <code>depend(X,a), depend(M,b)</code></li>
 </ul>
-<p>Her står at aritmetiske instruktioner er afhængig er at værdierne for både <code>a</code> og <code>b</code> er klar til fase <code>X</code>, samt at de producerer deres resultat til register <code>b</code> i slutningen af fase <code>X</code>.
-Læsning fra hukommelsen kræver at adressen der skal læses fra register <code>a</code> er klar til fase <code>X</code> (husk at vi har beregningen af adressen i <code>X</code> fasen, selvom læsningen først foregår i <code>M</code> fasen), mens resultatet er læsningen til register <code>b</code> er klar efter fase <code>M</code>.
-Ved Skrivning til hukommelsen skal adressen i register <code>a</code> er klar til fase <code>X</code>, mens værdien først skal være klar til fase <code>M</code>. Skrivning til hukommelsen har ikke noget resultat.</p>
+<p>Her står at aritmetiske instruktioner er afhængig af, at værdierne for både <code>a</code> og <code>b</code> er klar til fase <code>X</code>, samt at de producerer deres resultat til register <code>b</code> som kan bruges fra starten af fase <code>M</code>.
+Læsning fra hukommelsen kræver at adressen der skal læses fra register <code>a</code> er klar til fase <code>X</code> (husk at vi har beregningen af adressen i <code>X</code> fasen, selvom læsningen først foregår i <code>M</code> fasen), mens resultatet af læsningen til register <code>b</code> er klar til fase <code>W</code>.
+Ved skrivning til hukommelsen skal adressen i register <code>a</code> være klar til fase <code>X</code>, mens værdien først skal være klar til fase <code>M</code>. Skrivning til hukommelsen har ikke noget resultat.</p>
 <p>Vær opmærksom på at ovenstående implementerer en arkitektur med fuld forwarding. Altså at alle værdier kan bruges umiddelbart i næste clock periode i alle efterfølgende instruktioner; dvs. før de reelt set er skrevet tilbage til registerfilen.
 Hvis vi i stedet ville have en maskine uden forwarding, ville alle værdier bliver produceret til fase <code>W</code>, hvor vi reelt skriver værdien tilbage.</p>
 <h3 id="eksempel-data-afhngigheder">Eksempel: Data afhængigheder</h3>
-<p>Lad os nu definerer det korrekt afviklingspot for eksemplet. Først, lad os dog opsummerer alt vi har defineret for maskinen:</p>
+<p>Lad os nu definere det korrekte afviklingspot for eksemplet. Først, lad os dog opsummere alt vi har defineret for maskinen:</p>
 <ul>
 <li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
 </ul>
@@ -312,13 +312,13 @@ Hvis vi i stedet ville have en maskine uden forwarding, ville alle værdier bliv
 <td>Aritmetik</td>
 <td><code>op  a b</code></td>
 <td><code>FDXMW</code></td>
-<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
+<td><code>depend(X,a), depend(X,b), produce(M,b)</code></td>
 </tr>
 <tr>
 <td>Læsning</td>
 <td><code>movq (a),b</code></td>
 <td><code>FDXMW</code></td>
-<td><code>depend(X,a), produce(M,b)</code></td>
+<td><code>depend(X,a), produce(W,b)</code></td>
 </tr>
 <tr>
 <td>Skrivning</td>
@@ -335,9 +335,9 @@ Hvis vi i stedet ville have en maskine uden forwarding, ville alle værdier bliv
 <li>Skrivning        <code>movq b,(a)</code>: <code>delay(M)=2</code></li>
 <li>Alle øvrige faser tager har en latenstid på 1</li>
 </ul>
-<pre><code>                 01234567890     -- Beskrivelse
-movq (r10),r11   FDXMMW          -- produce(M,r11)
-addq $100,r11     FDDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+<pre><code class="text">                 01234567890     -- Beskrivelse
+movq (r10),r11   FDXMMW          -- produce(W,r11)
+addq $100,r11     FDDDXMW        -- depend(X,r11), produce(M,r11), stall i D
 movq r11,(r10)     FFFDXMMW      -- Stall i F, depend(X,r11)
 addq $8,r10           FDXXMW     -- Forsinket F
 subq $1,r12            FDDXMW    --
@@ -348,9 +348,9 @@ fordi den afhænger af <code>r11</code> som bliver produceret af den forudgåend
 der har en latenstid på 2 clock-perioder.</p>
 <h2 id="in-order-udfrsel-af-instruktioner">In-order udførsel af instruktioner</h2>
 <p>Men hov! Vi har lige fundet ud af at sidste instruktion ikke har dataafhængigheder til de øvrige, så hvorfor kan vi ikke spare en clock periode ved at lave:</p>
-<pre><code>                 01234567        -- Beskrivelse
-movq (r10),r11   FDXMMW          -- produce(M,r11)
-addq $100,r11      FDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+<pre><code class="text">                 01234567        -- Beskrivelse
+movq (r10),r11   FDXMMW          -- produce(W,r11)
+addq $100,r11      FDDXMW        -- depend(X,r11), produce(M,r11), stall i D
 movq r11,(r10)      FFFDXMMW     -- Stall i F, depend(X,r11)
 addq $8,r10            FDXXMW    -- Forsinket F
 subq $1,r12       FDXXMW         --
@@ -358,22 +358,22 @@ subq $1,r12       FDXXMW         --
 
 <p>Vi har måske lidt svært ved at se, hvordan en maskine overhovedet skulle
 kunne konstrueres således at ovenstående afviklingsrækkefølge kunne finde sted og en maskine er nødt til at læse instruktionerne i den rækkefølge, som er specificeret i vores program.</p>
-<p>Vi indfører derfor en begrænsning mere: Hver fase gennemføres i instruktionerne i rækkefølge.</p>
+<p>Vi indfører derfor en begrænsning mere: Hver fase gennemføres i instruktions-rækkefølge.</p>
 <pre><code>inorder(F,D,X,M,W)
 </code></pre>
 
 <p>Vi har overholdt dette i tidligere eksempler. Vi kan tjekke det ved at når vi læser hver søjle oppefra, skal vi se faserne bagfra.</p>
-<p>Det er dog noget som vores oversætter kan håndterer, ved at flytte sidste instruktion frem. Dermed kan vi opnå ovenstående udførsel:</p>
-<pre><code>                 01234567        -- Beskrivelse
+<p>I det her tilfælde kan vores oversætter forbedre situationen, ved at flytte sidste instruktion frem. Dermed kan vi opnå ovenstående udførsel:</p>
+<pre><code class="text">                 01234567        -- Beskrivelse
                  01234567        -- Beskrivelse
-movq (r10),r11   FDXMMW          -- produce(M,r11)
+movq (r10),r11   FDXMMW          -- produce(W,r11)
 subq $1,r12       FDXXMW         --
-addq $100,r11      FDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+addq $100,r11      FDDXMW        -- depend(X,r11), produce(M,r11), stall i D
 movq r11,(r10)      FFFDXMMW     -- Stall i F, depend(X,r11)
 addq $8,r10            FDXXMW    -- Forsinket F
 </code></pre>
 
-<h2 id="kontrol-afhngigheder">Kontrol afhængigheder</h2>
+<h2 id="kontrolafhngigheder">Kontrolafhængigheder</h2>
 <p>&nbsp;</p>
               
             </div>
