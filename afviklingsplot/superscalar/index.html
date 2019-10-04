@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Superskalar - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Superskalar";
+    var mkdocs_page_input_path = "afviklingsplot/superscalar.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../x86prime/">x86prime</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../">Introduktion</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../pipeline/">Simpel pipeline</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Superskalar</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#superskalar-mikroarkitektur">Superskalar mikroarkitektur</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#eksempel-superskalar">Eksempel: Superskalar</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../anonyme/">Anonyme Faser</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../out-of-order/">Out-of-order</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
+    
+    <li>Superskalar</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="superskalar-mikroarkitektur">Superskalar mikroarkitektur</h1>
+<p>I jagten efter højere ydeevne kan man finde på at skrue op for ressourcerne.
+Hvis der er mere end en instruktion der udfører sin <code>X</code>-fase samtidigt, taler
+man om en superskalar maskine.
+Det er en naturlig følge af en simpel pipeline arkitektur, og de første superskalar arkitekturer kom da også kort efter disse. Valget af <code>X</code> fasen skyldes den indsigt at denne fase er særligt meget brugt og ofte af instruktioner som ikke har en dataafhængighed. Men for at have flere instruktioner er man også nødt til at udvide andre dele af arkitekturen.</p>
+<p>En simpel 2-vejs superskalar kan derfor håndtere to instruktioner samtidigt i
+faserne <code>F</code>,<code>D</code>,<code>X</code> og <code>W</code>, men kun 1 instruktion samtidigt i fase <code>M</code>. Det er motiveret
+af at fase <code>M</code> er dyrere end de andre. Tilgengæld kan man knytte en delmængde af de mulige faser
+til forskellige klasser af instruktioner: f.eks. det er således at ikke alle har en fase <code>M</code>.
+Man kan også undgå en fase <code>W</code> for instruktioner der ikke skriver til et resultat
+registerfilen.</p>
+<h2 id="eksempel-superskalar">Eksempel: Superskalar</h2>
+<p>Faser:</p>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:2</code>, <code>D:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
+<li>Alle faser tager har en latenstid på 1</li>
+<li><code>inorder(F,D,X,M,W)</code></li>
+</ul>
+<p>Begrænsninger på instruktioner:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>FDXW</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>FDXMW</code></td>
+<td><code>depend(X,a), produce(M,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>FDXM</code></td>
+<td><code>depend(X,a), depend(M,b)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Overvej afviklingen af følgende program:</p>
+<pre><code>                 012345678      -- Vigtige dataafhængigheder
+movq (r10),r11   FDXMW          -- produce(M,r11)
+addq $100,r11    FDDDXW         -- depend(X,r11), produce(X,r11)
+movq r11,(r10)    FDDXM         -- depend(M,r11)
+subq $8,r10       FFFDXW        --
+</code></pre>
+
+<ol>
+<li>periode: Nu kan vi indhente og afkode både første og anden instruktion</li>
+<li>periode: Begge instruktioner flyttes til afkodning og de to næste bliver indhentet. Her finder vi ud af at der er en dataafhængighed mellem de to første og sikre at anden instruktion blive stalled i <code>D</code>.</li>
+<li>periode: Tredje instruktion (skrivning) flyttes til afkodning, men <code>subq</code> bliver stalled i <code>F</code>, da der ikke er plads i <code>D</code>.</li>
+<li>periode: Sker ikke noget nyt.</li>
+<li>periode: Læsningen er færdig og alle instruktioner kan flyttes frem. Skrivningen behøver ikke at blive stalled, da afhængigheden til <code>r11</code> først er i fase <code>M</code>.</li>
+<li>periode og frem forløber som forventet.</li>
+</ol>
+<p>Hvis vi igen kigger på søjlerne i plottet, har ingen af disse flere forekomster af faserne end vi har ressourcer  til rådighed. Der er altså højst 2 <code>F</code>'er, <code>D</code>'er osv., men kun højest et <code>M</code>. Dertil ser vi at søjlerne oppefra lister faserne bagfra og vi ved derfor at disse bliver udført in-order.</p>
+<p>&nbsp;</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../anonyme/" class="btn btn-neutral float-right" title="Anonyme Faser">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../pipeline/" class="btn btn-neutral" title="Simpel pipeline"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../pipeline/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../anonyme/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Out-of-order - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Out-of-order";
+    var mkdocs_page_input_path = "afviklingsplot/out-of-order.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../x86prime/">x86prime</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../">Introduktion</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../pipeline/">Simpel pipeline</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../superscalar/">Superskalar</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../anonyme/">Anonyme Faser</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Out-of-order</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#out-of-order">Out-of-order</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</a></li>
+        
+            <li><a class="toctree-l4" href="#standardmodellen-for-out-of-order-mikroarkitektur">Standardmodellen for out-of-order mikroarkitektur</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
+    
+    <li>Out-of-order</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="out-of-order">Out-of-order</h1>
+<h2 id="faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</h2>
+<p>Man kunne jo forestille sig:</p>
+<pre><code>                 012345678
+movq (r10),r11   FDXMW          r11.time = 4
+addq $100,r11    FDDDXW         X.time &gt;= r11.time -&gt; Forsinket X, Gentag D, r11.time = 5
+movq r9,(r14)     FDXM          X.time &gt;= r14.time, M.time &gt;= r9.time  &lt;---- BEMÆRK!
+addq $1,r10       FFDXXW        resB -&gt; Gentag F, r10.time = 5 (eller 6)
+</code></pre>
+
+<p>Bemærk at instruktion nummer 3 her får sin X-fase en clock periode tidligere end instruktionen
+før. På en måde overhaler instruktion nummer 3 altså instruktion nummer 2.</p>
+<p>Men det tillader vores inorder() erklæring ikke og giver os i stedet:</p>
+<pre><code>                 012345678
+movq (r10),r11   FDXMW          r11.time = 4
+addq $100,r11    FDDDXW         X.time &gt;= r11.time -&gt; Forsinket X, Gentag D, r11.time = 5
+movq r9,(r14)     FDDXM         inorder(X) -&gt; Forsinket X, vent i D, X.time &gt;= r14.time, M.time &gt;= r9.time
+addq $1,r10       FFFDXW        resB -&gt; Gentag F, r10.time = 7
+</code></pre>
+
+<p>Vi kan ane at der findes mere ydeevne i form af mere parallelisme i udførelsen, hvis vi
+blot kan afvige fra inorder-kravet i en eller flere faser.</p>
+<p>Det har man gjort for "special cases" i mange maskiner gennem årene, men de sidste 20 år er der
+etableret en mere generel "standard model" for out-of-order maskiner</p>
+<h2 id="standardmodellen-for-out-of-order-mikroarkitektur">Standardmodellen for out-of-order mikroarkitektur</h2>
+<h3 id="inorder-og-out-of-order">Inorder og out-of-order</h3>
+<p>I denne model passerer instruktioner først i programrækkefølge gennem en pipeline hvor de ender i
+en skeduleringsenhed (scheduler). Derfra kan de udføres uden at overholde programrækkefølgen.
+Efter udførsel placeres resultaterne i en form for kø. Resultaterne udtages fra denne kø og fuldføres
+i programrækkefølge. Det gælder såvel for skrivninger til registre, som for skrivninger til lageret.</p>
+<p>Vi kan beskrive det ved følgende faser der er fælles for alle instruktioner:
+<em> F: Start på instruktionshentning
+</em> Q: Ankomst til scheduler
+* C: Fuldførelse</p>
+<p>Og vi benytter lejligheden til at fjerne <code>W</code> trinnet fra beskrivelsen.</p>
+<h3 id="lagerreferencer">Lagerreferencer</h3>
+<p>I de hidtil beskrevne maskiner bruger både lagerreferencer og aritmetiske
+instruktioner fasen <code>X</code>. Det afspejler at man i simple maskiner foretager
+adresseberegning med den samme hardware som man bruger til aritmetiske
+instruktioner. I standardmodellen har man i stedet en dedikeret fase til
+adresseberegning, kaldet <code>A</code>. Denne skelnen mellem <code>A</code> og <code>X</code> gør at man kan
+begrænse <code>A</code> til at forekomme i instruktionsrækkefølge, mens de andre
+beregninger ikke har den begrænsning.</p>
+<p>Instruktioner der skriver til lageret har et væsentlig mere kompliceret
+forløb i en out-of-order maskine sammenlignet med en inorder maskine.
+Disse instruktioner må ikke opdatere lageret før <code>C</code>, så i stedet
+placeres skrivningerne i en skrive-kø. Skrive-køen indeholder adresse
+og data som kan bruges til at udføre skrivningen senere, efter <code>C</code>.
+Instruktioner indføjes i skrivekøen umiddelbart efter <code>A</code>. Da <code>A</code> er
+en fase der udføres i instruktionsrækkefølge, kan efterfølgende instruktioner
+der læser fra lageret sammenligne deres adresse med udestående skrivninger
+i skrive-køen, og hvis adressen matcher kan den tilsvarende værdi hentes
+fra skrive-køen. Instruktioner der skriver til lageret kan (skal) indsætte
+deres adresse i skrive-køen selvom den værdi der skal skrives endnu ikke
+er beregnet. Det tidspunkt hvor værdien kopieres til skrive-køen markeres <code>V</code>.</p>
+<h3 id="en-lille-out-of-order-model">En lille out-of-order model</h3>
+<p>Her er en model af en lille out-of-order maskine</p>
+<pre><code>aritmetik:  F----QXC
+movq (a),b: F----QAM--C
+movq b,(a): F----QAMVC
+
+dataafhængigheder:
+aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
+movq (a),b: A.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
+movq b,(a): A.time &gt;= a.time, V.time &gt;= b.time; MEM[a].time = V.time + 1
+
+inorder(F,Q,C,A)
+outoforder(X,M)
+resB: max pr clk: F:2, Q:2, X:2, A:1, M:1, V:1, C:2
+resC: max pr clk: F-Q: 8, M-W: 2, Q-C: 32
+resD: unbounded: Q-X, Q-A, A-M, M-V, V-C, M-C
+</code></pre>
+
+<p>Bemærk at udover at faserne X og M nu er erklæret out-of-order, så er
+der indsat en begrænsning på 32 instruktioner fra Q til C. Det vil sige
+vi tillader 32 instruktioner at være i forskellige faser mellem Q og C.
+Dette kaldes skeduleringsvinduet. Jo større det er, jo flere instruktioner
+kan maskinen "se fremad" i instruktionsstrømmen.</p>
+<p>Bemærk også at til forskel fra alle de tidligere maskiner er der ikke
+længere noget krav om X skal følge i en bestemt afstand efter Q, eller
+at C skal følge i en bestemt afstand efter X eller M.</p>
+<p>Disse begrænsninger ville give følgende udførelse</p>
+<pre><code>                 012345678901234567
+movq (r10),r11   F----QAM--C            r11.time = 10
+addq $100,r11    F----Q----XC           r11.time = 11
+movq r11,(r10)    F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+addq $8,r10       F----QX----C          r10.time = 8
+movq (r10),r11     F----QAM---C         X.time &gt;= r10.time, r11.time = 12
+addq $100,r11      F----Q----XC         X.time &gt;= r11.time, r11.time = 13
+movq r11,(r10)      F----QAM--VC        X.time &gt;= r10.time, V.time &gt;= r11.time
+addq $8,r10         F----QX----C        r10.time = 10
+</code></pre>
+
+<p>Med en gennemsnitlig ydeevne på 2 IPC.</p>
+<p>&nbsp;</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../kontrol/" class="btn btn-neutral float-right" title="Kontrol afhængigheder">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../anonyme/" class="btn btn-neutral" title="Anonyme Faser"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../anonyme/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../kontrol/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

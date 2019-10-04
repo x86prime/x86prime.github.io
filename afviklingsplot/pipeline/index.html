@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Simpel pipeline - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Simpel pipeline";
+    var mkdocs_page_input_path = "afviklingsplot/pipeline.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../x86prime/">x86prime</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../">Introduktion</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Simpel pipeline</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#pipeline-faser-og-ressourcer">Pipeline faser og ressourcer</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#eksempel-simpel-pipeline-mikroarkitektur">Eksempel: Simpel pipeline mikroarkitektur</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#latenstid-af-faser">Latenstid af faser</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#eksempel-latenstid">Eksempel: Latenstid</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#data-afhngigheder-og-forwarding">Data afhængigheder og forwarding</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#eksempel-data-afhngigheder">Eksempel: Data afhængigheder</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#in-order-udfrsel-af-instruktioner">In-order udførsel af instruktioner</a></li>
+    
+
+    <li class="toctree-l3"><a href="#kontrol-afhngigheder">Kontrol afhængigheder</a></li>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../superscalar/">Superskalar</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../anonyme/">Anonyme Faser</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../out-of-order/">Out-of-order</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
+    
+    <li>Simpel pipeline</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="pipeline-faser-og-ressourcer">Pipeline faser og ressourcer</h2>
+<p>Siden slutningen af 70'erne hvor de første pipeline arkitekturer blev introduceret, har en instruktion gennemgået flere faser når den afvikles. Nogle faser er generiske; nogle afhænger af instruktionen.</p>
+<p>Faserne gennemløbes i rækkefølge bestemt af instruktionstype og mikroarkitektur.</p>
+<p>Betragt for eksempel en afviklingen på en simpel pipeline, typisk for de første RISC
+maskiner konstrueret i 80'erne. Her er der fem faser:</p>
+<ul>
+<li><code>F</code>: Fetch, indlæsning af instruktionen fra hukommelse,</li>
+<li><code>D</code>: Decode, afkodning af instruktionen og udlæsning fra registerfil,</li>
+<li><code>X</code>: eXecute, udførsel af aritmetisk/logisk operation, samt beregning af mulig adresse,</li>
+<li><code>M</code>: Memory, læsning fra eller skrivning til hukommelsen,</li>
+<li><code>W</code>: Writeback, tilbageskrivning til registerfilen.</li>
+</ul>
+<p>Her ses nogle begrænsninger for en 5-trins pipeline:</p>
+<ul>
+<li>Alle instruktioner gennemløber: <code>FDXMW</code></li>
+<li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
+</ul>
+<p>Ovenstående skal læses som: alle instruktioner passerer gennem samtlige fem trin ordnet som beskrevet; det findes en ressource for hvert trin, altså der kan kun være en instruktion i hver trin.</p>
+<p>Bemærk at det er en voldsom forenkling at udtrykke begrænsningen for
+instruktionshentning i et antal instruktioner. Især hvis instruktionen kommer til at ligge over to cache linier. For en maskine med instruktioner
+af forskellig længde er bindingen mere korrekt udtrykt som et antal bytes.
+Først i forbindelse med afkodning er det klart, hvor en instruktion begynder
+og slutter. Den lille detalje vil vi se bort fra.</p>
+<h3 id="eksempel-simpel-pipeline-mikroarkitektur">Eksempel: Simpel pipeline mikroarkitektur</h3>
+<p>For eksempel vil afviklingsplottet for et mindre udvidet eksempel program, vil være følgende:</p>
+<pre><code>                 012345678
+movq (r10),r11   FDXMW
+mulq r10,r12      FDXMW
+addq $100,r13      FDXMW
+movq r14,(r10)      FDXMW
+subq $1,r10          FDXMW
+</code></pre>
+
+<p>Her ses at første instruktion bliver indhentet i første clock periode. I anden clock periode vil anden instruktion blive indhentet samtidig med at første instruktion bliver afkodet, osv.</p>
+<p>Det er vigtigt at vi overholde begrænsningerne. For at tjekke det ser vi at:
+<em> første begrænsning bliver overholdt, da alle linier i plottet indeholder alle fem trin, og
+</em> anden begrænsning bliver overholdt da hver søjle (clock periode) kun indeholder hvert trin en gang.</p>
+<p>Hvis vi prøver at udregne ydeevnen for programmet, kan vi se at det samlet bruger 8 clock perioder: antallet af instruktioner + antallet af trin - 1. Hvis vi sammenligner med vores enkelt-cyklus maskine, er dette næsten så mange clock perioder, men en periode vil også være signifikant kortere; dog ikke så lav som en femtedel.</p>
+<h2 id="latenstid-af-faser">Latenstid af faser</h2>
+<p>På en pipeline arkitektur bruger instruktioner en eller flere clock-perioder
+til at producere et resultat. Det kaldes instruktionens latenstid. Latenstiden
+er den tid der går fra instruktionen modtager/fremfinder sin sidste indgående operand
+og til en efterfølgende instruktion som afhænger af resultatet kan begynde
+sin beregning.</p>
+<p>Man planlægger normalt en mikroarkitektur således at de grundlæggende
+aritmetisk og logiske instruktioner har en latenstid på en enkelt clock
+periode.</p>
+<p>Andre instruktioner kan så få længere latenstid, fordi de udfører et mere
+kompliceret stykke arbejde. For eksempel er multiplikation mere kompliceret
+end addition og har derfor en latenstid på 3-4 clock perioder.</p>
+<p>Tilgang til lageret er også mere kompliceret og tager længere tid end en
+enkelt clock periode.</p>
+<h3 id="eksempel-latenstid">Eksempel: Latenstid</h3>
+<p>Lad os undersøge en pipeline maskine og definerer latenstiden i clock perioder (delay) for instruktionerne som:</p>
+<ul>
+<li>Simpel aritmetik <code>op  a b</code>:    <code>delay(X)=1</code></li>
+<li>Multiplikation   <code>mul a b</code>:    <code>delay(X)=4</code></li>
+<li>Læsning          <code>movq (a),b</code>: <code>delay(M)=2</code></li>
+<li>Skrivning        <code>movq b,(a)</code>: <code>delay(M)=2</code></li>
+<li>Alle øvrige faser tager har en latenstid på 1</li>
+</ul>
+<p>Husk vi har stadig:</p>
+<ul>
+<li>Alle instruktioner gennemløber: <code>FDXMW</code></li>
+<li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
+</ul>
+<p>Det tidligere eksempel, vil nu blive</p>
+<pre><code>                           111
+                 0123456789012
+movq (r10),r11   FDXMMW
+mulq r10,r12      FDXXXXMW
+addq $100,r13      FDDDDXMW
+movq r14,(r10)      FFFFDXMMW
+subq $1,r10             FDXXMW
+</code></pre>
+
+<p>Da vi i første instruktion læser fra hukommelsen, vil <code>M</code> fasen nu tage to cykler. Det samme ses for anden instruktion, der nu bliver i <code>X</code> fasen i fire clock perioder.</p>
+<p>Tredje instruktion er tilgengæld mindre åbenlys. Vi skal stadig overholde de to begrænsninger fra tidligere. Specifikt kan <code>addq</code> instruktionen ikke begynde <code>X</code> fasen før <code>mulq</code> er færdig. Derfor laves en forsinkelse ("stall"), som sikre <code>addq</code> bliver i <code>D</code> fasen. På samme måde er vi nødt til at forsinke skrivningen i fjerde instruktion ved at stalle den i <code>F</code>.</p>
+<p>Indlæsningen af sidste instruktion, <code>subq</code>, kan derfor ikke begyndes før clock periode nummer 7, når <code>F</code> frigives fra den tidligere instruktion. Læg også mærke til at instruktionen er nødt til at stalle i <code>X</code>.</p>
+<p>Igen ser vi at:</p>
+<ul>
+<li>alle linier i plottet indeholder alle fem trin mindst en gang, og</li>
+<li>hver søjle (clock periode) kun indeholder hvert trin en gang.</li>
+</ul>
+<p>Vi kan igen prøver at udregne ydeevnen for programmet og se at det samlet bruger 13 clock perioder. Igen bliver det flere perioder hvis vi sammenligner med den simple pipeline, men igen kan vi forvente en lavere clock periode.</p>
+<h2 id="data-afhngigheder-og-forwarding">Data afhængigheder og forwarding</h2>
+<p>Mere signifikant end latenstiden er data afhængigheder. Det har ikke været et problem i vores tidligere eksempler (ikke en tilfældighed), men kan hurtigt blive det for normale programmer.</p>
+<p>Overvej følgende program:</p>
+<pre><code>movq (r10),r11
+addq $100,r11
+movq r11,(r10)
+addq $8,r10
+subq $1,r12
+</code></pre>
+
+<p>Her bliver både register <code>r11</code> opdateret i instruktionen lige før det bliver læst; endda to gange. F.eks. indlæser første instruktion en værdi til <code>r11</code>, som anden instruktion staks lægger noget til; men også fra anden til tredje instruktion. Vi kan lave data-flow graph, som beskrevet i CSapp, som vil tydeliggøre de data afhængigheder, som eksisterer i programmet. Instruktionsnummeret er indsat efter navnet.</p>
+<pre><code class="text">    r10  r11   r12
+      | \ |     |
+      | movq1   |
+      |   |     |
+      | addq2   |
+      | / |     |
+    movq3 |     |
+      |   |     |
+    addq4 |    subq5
+      |   |     |
+    r10  r11   r12
+
+</code></pre>
+
+<p>Hvis vi laver et simple afviklingsplot som før, vil vi få følgende:</p>
+<pre><code>movq (r10),r11  FDXMMW
+addq $100,r11    FDXXMW
+movq r11,(r10)    FDDXMMW
+addq $8,r10        FDDXXMW
+subq $1,r12         FFDDXMW
+(OVENSTÅENDE VIRKER IKKE)
+</code></pre>
+
+<p>Ud over den tydelige tekst, som indikerer det, kan vi overbevise os selv om at ovenstående ikke virker. Vi har en data afhængighed mellem læsningen og først addition og vi ved fra ovenstående den tidligere uformelle beskrivelse at læsning fra hukommelse sker i <code>M</code>fasen. Men i plottet laver vi additionen i <code>X</code> samtidig med <code>M</code>; altså før vi har værdien til rådighed.</p>
+<p>For at undgå dette er vi nødt til at tilføje afhængighederne til vores instruktioner. Det kan vi skrive på følgende måde:</p>
+<ul>
+<li>Aritmetik   <code>op  a b</code>:    <code>depend(X,a), depend(X,b), produce(X,b)</code></li>
+<li>Læsning     <code>movq (a),b</code>: <code>depend(X,a), produce(M,b)</code></li>
+<li>Skrivning   <code>movq b,(a)</code>: <code>depend(X,a), depend(M,b)</code></li>
+</ul>
+<p>Her står at aritmetiske instruktioner er afhængig er at værdierne for både <code>a</code> og <code>b</code> er klar til fase <code>X</code>, samt at de producerer deres resultat til register <code>b</code> i slutningen af fase <code>X</code>.
+Læsning fra hukommelsen kræver at adressen der skal læses fra register <code>a</code> er klar til fase <code>X</code> (husk at vi har beregningen af adressen i <code>X</code> fasen, selvom læsningen først foregår i <code>M</code> fasen), mens resultatet er læsningen til register <code>b</code> er klar efter fase <code>M</code>.
+Ved Skrivning til hukommelsen skal adressen i register <code>a</code> er klar til fase <code>X</code>, mens værdien først skal være klar til fase <code>M</code>. Skrivning til hukommelsen har ikke noget resultat.</p>
+<p>Vær opmærksom på at ovenstående implementerer en arkitektur med fuld forwarding. Altså at alle værdier kan bruges umiddelbart i næste clock periode i alle efterfølgende instruktioner; dvs. før de reelt set er skrevet tilbage til registerfilen.
+Hvis vi i stedet ville have en maskine uden forwarding, ville alle værdier bliver produceret til fase <code>W</code>, hvor vi reelt skriver værdien tilbage.</p>
+<h3 id="eksempel-data-afhngigheder">Eksempel: Data afhængigheder</h3>
+<p>Lad os nu definerer det korrekt afviklingspot for eksemplet. Først, lad os dog opsummerer alt vi har defineret for maskinen:</p>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:1</code>, <code>D:1</code>, <code>X:1</code>, <code>M:1</code>, <code>W:1</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>FDXMW</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>FDXMW</code></td>
+<td><code>depend(X,a), produce(M,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>FDXMW</code></td>
+<td><code>depend(X,a), depend(M,b)</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Simpel aritmetik <code>op  a b</code>:    <code>delay(X)=1</code></li>
+<li>Multiplikation   <code>mul a b</code>:    <code>delay(X)=4</code></li>
+<li>Læsning          <code>movq (a),b</code>: <code>delay(M)=2</code></li>
+<li>Skrivning        <code>movq b,(a)</code>: <code>delay(M)=2</code></li>
+<li>Alle øvrige faser tager har en latenstid på 1</li>
+</ul>
+<pre><code>                 01234567890     -- Beskrivelse
+movq (r10),r11   FDXMMW          -- produce(M,r11)
+addq $100,r11     FDDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+movq r11,(r10)     FFFDXMMW      -- Stall i F, depend(X,r11)
+addq $8,r10           FDXXMW     -- Forsinket F
+subq $1,r12            FDDXMW    --
+</code></pre>
+
+<p>Bemærk hvorledes instruktion nr. 2 bliver forsinket en clock periode i sin <code>D</code>-fase,
+fordi den afhænger af <code>r11</code> som bliver produceret af den forudgående instruktion
+der har en latenstid på 2 clock-perioder.</p>
+<h2 id="in-order-udfrsel-af-instruktioner">In-order udførsel af instruktioner</h2>
+<p>Men hov! Vi har lige fundet ud af at sidste instruktion ikke har dataafhængigheder til de øvrige, så hvorfor kan vi ikke spare en clock periode ved at lave:</p>
+<pre><code>                 01234567        -- Beskrivelse
+movq (r10),r11   FDXMMW          -- produce(M,r11)
+addq $100,r11      FDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+movq r11,(r10)      FFFDXMMW     -- Stall i F, depend(X,r11)
+addq $8,r10            FDXXMW    -- Forsinket F
+subq $1,r12       FDXXMW         --
+</code></pre>
+
+<p>Vi har måske lidt svært ved at se, hvordan en maskine overhovedet skulle
+kunne konstrueres således at ovenstående afviklingsrækkefølge kunne finde sted og en maskine er nødt til at læse instruktionerne i den rækkefølge, som er specificeret i vores program.</p>
+<p>Vi indfører derfor en begrænsning mere: Hver fase gennemføres i instruktionerne i rækkefølge.</p>
+<pre><code>inorder(F,D,X,M,W)
+</code></pre>
+
+<p>Vi har overholdt dette i tidligere eksempler. Vi kan tjekke det ved at når vi læser hver søjle oppefra, skal vi se faserne bagfra.</p>
+<p>Det er dog noget som vores oversætter kan håndterer, ved at flytte sidste instruktion frem. Dermed kan vi opnå ovenstående udførsel:</p>
+<pre><code>                 01234567        -- Beskrivelse
+                 01234567        -- Beskrivelse
+movq (r10),r11   FDXMMW          -- produce(M,r11)
+subq $1,r12       FDXXMW         --
+addq $100,r11      FDDXMW        -- depend(X,r11), produce(X,r11), stall i D
+movq r11,(r10)      FFFDXMMW     -- Stall i F, depend(X,r11)
+addq $8,r10            FDXXMW    -- Forsinket F
+</code></pre>
+
+<h2 id="kontrol-afhngigheder">Kontrol afhængigheder</h2>
+<p>&nbsp;</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../superscalar/" class="btn btn-neutral float-right" title="Superskalar">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../" class="btn btn-neutral" title="Introduktion"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../superscalar/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

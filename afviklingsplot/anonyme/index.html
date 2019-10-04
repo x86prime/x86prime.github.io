@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Anonyme Faser - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Anonyme Faser";
+    var mkdocs_page_input_path = "afviklingsplot/anonyme.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../x86prime/">x86prime</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../">Introduktion</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../pipeline/">Simpel pipeline</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../superscalar/">Superskalar</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Anonyme Faser</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#anonyme-faser">Anonyme faser</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#lngere-pipelines">Længere pipelines</a></li>
+        
+            <li><a class="toctree-l4" href="#abstraktion">Abstraktion</a></li>
+        
+            <li><a class="toctree-l4" href="#ker">Køer</a></li>
+        
+            <li><a class="toctree-l4" href="#cache-miss">Cache-miss</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../out-of-order/">Out-of-order</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
+    
+    <li>Anonyme Faser</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="anonyme-faser">Anonyme faser</h1>
+<p>Det er lidt træls, hvis man skal redegøre separat for hver enkelt fase en instruktion
+gennemløber i en moderne mikroarkitektur. Det skyldes at moderne mikroarkitekturer
+afvikler instruktioner i mange forskellige faser.</p>
+<h2 id="lngere-pipelines">Længere pipelines</h2>
+<p>I moderne CMOS er det ikke realistisk at lave et cache-opslag på en enkelt cyklus.
+Typisk bruges tre cykler, fuldt pipelinet. Oftest er det heller ikke muligt at
+fuldt afkode en instruktion på en enkelt cyklus.</p>
+<p>Vi kunne navngive hver enkelt af de ekstra faser der kræves og opskrive regler
+for hver af dem. Vi vælger en simplere notation: Når vi opskriver faserne for
+en instruktionsklasse kan vi</p>
+<ul>
+<li>tilføje anonyme faser som er påkrævet med <code>-</code> og</li>
+<li>angive hvor mange instruktioner der kan befinde sig i "mellemrummet" mellem
+  to navngivne faser.</li>
+</ul>
+<p>Man kan vælge at betragte tidligere beskrivelser af begrænsinger som specialtilfælde,
+hvor <em>ingen</em> instruktioner må være i anonyme faser, dvs: <code>F-D: 0</code>, <code>D-X: 0</code>, <code>X-M: 0</code>, <code>M-W: 0</code>.
+Her betyder såleds "<code>F-D: 0</code>" at der ingen instruktioner må være, som har gennemført fase
+F, men ikke påbegyndt D. Med andre ord: Fase <code>D</code> skal følge direkte efter fase <code>F</code> i afviklingsplottet</p>
+<p>For eksempel:</p>
+<pre><code>resC: max pr clk: F-D: 4, D-X: 2, M-W: 2
+</code></pre>
+
+<p>Angiver fire ekstra instruktioner mellem <code>F</code> og <code>D</code>, 2 ekstra mellem <code>D</code> og <code>X</code> og to ekstra
+mellem <code>M</code> og <code>W</code>.</p>
+<p>Så vi i alt har:</p>
+<pre><code>aritmetik:  F--D-XW
+movq (a),b: F--D-XM--W
+movq b,(a): F--D-XM
+
+dataafhængigheder:
+aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
+movq (a),b: X.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
+movq b,(a): X.time &gt;= a.time, M.time &gt;= b.time; MEM[a].time = S.time + 3
+
+inorder(F,D,X,M,W)
+resB: max pr clk: F:2, D:2, X:2, M:1, W:2
+resC: max pr clk: F-D: 4, D-X: 2, M-W: 2
+</code></pre>
+
+<p>Hvilket giver følgende afvikling</p>
+<pre><code>                 012345678901234567
+movq (r10),r11   F--D-XM--W            r11.time = 9
+addq $100,r11    F--D-----XW           X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 10
+movq r11,(r10)    F--D----XM           X.time &gt;= r10.time, M.time &gt;= r11.time
+addq $8,r10       F--DDDDD-XW          r10.time = 11
+movq (r10),r11     F--DDDD--XM--W      X.time &gt;= r10.time, r11.time = 15
+addq $100,r11      F------D-----XW     X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 16
+movq r11,(r10)      F-----DD----XM     X.time &gt;= r10.time, M.time &gt;= r11.time
+addq $8,r10         F------DDDDD-XW    r10.time = 17
+</code></pre>
+
+<p>Vores specifikation kan kræve anonyme faser, f.eks. to mellem <code>F</code> og <code>D</code> som ovenfor,
+men vi kan også indsætte yderligere anonyme faser i afviklingsplottet for at
+få afviklingen til at overholde andre begrænsninger.</p>
+<h2 id="abstraktion">Abstraktion</h2>
+<p>Anonyme faser gør det nemmere at se bort fra ting der ikke har interesse.
+For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, men få samme afvikling:</p>
+<pre><code>aritmetik:  F----XW
+movq (a),b: F----XM--W
+movq b,(a): F----XM
+
+dataafhængigheder:
+aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
+movq (a),b: X.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
+movq b,(a): X.time &gt;= a.time, M.time &gt;= b.time; MEM[a].time = S.time + 3
+
+inorder(F,X,M,W)
+resB: max pr clk: F:2, X:2, M:1, W:2
+resC: max pr clk: F-X: 8, M-W: 2
+</code></pre>
+
+<p>Hvilket giver den samme afvikling, blot er <code>D</code> ikke nævnt.</p>
+<pre><code>                 012345678901234567
+movq (r10),r11   F----XM--W            r11.time = 9
+addq $100,r11    F--------XW           X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 10
+movq r11,(r10)    F-------XM           X.time &gt;= r10.time, M.time &gt;= r11.time
+addq $8,r10       F--------XW          r10.time = 11
+movq (r10),r11     F--------XM--W      X.time &gt;= r10.time, r11.time = 15
+addq $100,r11      F------------XW     X.time &gt;= r11.time -&gt; Forsinket X, r11.time = 16
+movq r11,(r10)      F-----------XM     X.time &gt;= r10.time, M.time &gt;= r11.time
+addq $8,r10         F------------XW    r10.time = 17
+</code></pre>
+
+<p>Bemærk iøvrigt at selvom denne maskine kan håndtere 2 instruktioner per clk, så
+opnår den i ovenstående eksempel 8/11 IPC, dvs mindre end 1 instruktion per clk.</p>
+<h2 id="ker">Køer</h2>
+<p>TBD</p>
+<h2 id="cache-miss">Cache-miss</h2>
+<p>TBD</p>
+<p>&nbsp;</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../out-of-order/" class="btn btn-neutral float-right" title="Out-of-order">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../superscalar/" class="btn btn-neutral" title="Superskalar"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../superscalar/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../out-of-order/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

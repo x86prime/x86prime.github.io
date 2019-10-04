@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>x86prime - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "x86prime";
+    var mkdocs_page_input_path = "x86prime.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">x86prime</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#the-x86prime-instruction-set">The x86prime instruction set</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#register-names">Register names</a></li>
+        
+            <li><a class="toctree-l3" href="#arithmetic-and-logical-instructions">Arithmetic and logical instructions</a></li>
+        
+            <li><a class="toctree-l3" href="#data-transfer-instructions">Data transfer instructions</a></li>
+        
+            <li><a class="toctree-l3" href="#conditional-and-unconditional-jumps">Conditional and unconditional jumps</a></li>
+        
+            <li><a class="toctree-l3" href="#procedural-instructions">Procedural instructions</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/">Introduktion</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/pipeline/">Simpel pipeline</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/superscalar/">Superskalar</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/anonyme/">Anonyme Faser</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/out-of-order/">Out-of-order</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../afviklingsplot/kontrol/">Kontrol afhængigheder</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>x86prime</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-x86prime-instruction-set">The x86prime instruction set</h1>
+<p><em>By Finn Schiermer Andersen and Michael Kirkedal Thomsen</em></p>
+<p>For students to learn about assembly programming is always hard. It is a significantly different model from what they often know from normal imperative programming (e.g. C, C++, C#). Understanding and working with all the details of X86_64, many of which are there as a reminiscent from old architecture designs, makes this even harder. To simplify this we have designed x86prime.</p>
+<p>The instruction set x86prime has been designed to be an interesting subset of x86_64, but for parts that are unnecessarily complex (especially conditional jumps) have been inspired mainly RISC5.</p>
+<p>In the following we will describe the instruction set of x86prime and its difference to x86.
+However, the following text is <em>not</em> as stand-alone text. It will not describe the detailed semantics of the instructions and we refer to other texts for this. But with a basic knowledge about instructions, you will be safe.</p>
+<!-- For more information about x86prime we can also refer you to:
+
+* [README](README.md) for information about the different x86prime tools and how to set them up,
+* [Encoding](encoding.txt) that explains how x86prime assembly code are encoded into machine code, and
+* [Execution plot](afviklingsplot.md) that explains how x86prime instructions are progressing though different stages pipelined architectures.
+ -->
+
+<h2 id="register-names">Register names</h2>
+<p>The resister names are the expected from x86_64 and the special purpose use are kept, with one noticeable change. we advise not to use <code>%r14</code> as it is used for procedure calls (see later).</p>
+<p><code>%rax</code>,
+<code>%rbc</code>,
+<code>%rcx</code>,
+<code>%rdx</code>,
+<code>%rbp</code>,
+<code>%rsi</code>,
+<code>%rdi</code>,
+<code>%rsp</code>,
+<code>%r8</code>,
+<code>%r9</code>,
+<code>%r10</code>,
+<code>%r11</code>,
+<code>%r12</code>,
+<code>%r13</code>,
+<code>%r14</code>,
+<code>%r15</code>.</p>
+<h2 id="arithmetic-and-logical-instructions">Arithmetic and logical instructions</h2>
+<p>Arithmetic and logical instructions are close following the instructions from x86, that is a binary format where the destination register <code>d</code> is updated (by an operation) with the source register <code>s</code>. That is</p>
+<pre><code>&lt;op&gt; s,d
+</code></pre>
+
+<p>You can also use a constant (<code>i</code>) instead of the source register</p>
+<pre><code>&lt;op&gt; $i,d
+</code></pre>
+
+<p>Remember the leading <code>$</code> before the constant.</p>
+<p>In the above <code>op</code> can be one of the following operations:</p>
+<ul>
+<li><code>addq</code>: addition</li>
+<li><code>subq</code>: subtraction</li>
+<li><code>andq</code>: bitwise and</li>
+<li><code>orq</code>: bitwise or</li>
+<li><code>xorq</code>: bitwise xor</li>
+<li><code>mulq</code>: signed multiplication</li>
+<li><code>imulq</code>: unsigned multiplication</li>
+<li><code>sarq</code>: shift arithmetic right (preserve topmost bit)</li>
+<li><code>salq</code>: shift arithmetic left (zero into lsb, do not preserve topmost bit)</li>
+<li><code>shrq</code>: shift (logical) right (zero into topmost bit)</li>
+</ul>
+<h3 id="load-effective-address">Load effective address</h3>
+<p>Load effective address (lea) is a special x86 instruction. It is we was, as the name says, historically meant as an easy way of calculating addresses without reading from memory; hence do pointer arithmetic as in know from C. However, today it is also widely used by compilers do perform standard arithmetic. We have therefore also opted to include it in x86prime.</p>
+<p>leaq can be used in the following ways:</p>
+<table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Semantics</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>leaq (s),d</code></td>
+<td><code>s</code> -&gt; <code>d</code></td>
+<td>Copy value from register <code>s</code> to register <code>d</code></td>
+</tr>
+<tr>
+<td><code>leaq (,z,v),d</code></td>
+<td><code>z</code>*<code>v</code> -&gt; <code>d</code></td>
+<td>Scale register <code>z</code> by <code>v</code> before copy to <code>d</code></td>
+</tr>
+<tr>
+<td><code>leaq (s,z,v),d</code></td>
+<td><code>s</code>+<code>z</code>*<code>v</code> -&gt; <code>d</code></td>
+<td>Scale and sum</td>
+</tr>
+<tr>
+<td><code>leaq i,d</code></td>
+<td><code>i</code> -&gt; <code>d</code></td>
+<td>Get a constant</td>
+</tr>
+<tr>
+<td><code>leaq i(s),d</code></td>
+<td><code>i</code>+<code>s</code> -&gt; <code>d</code></td>
+<td>Add a constant</td>
+</tr>
+<tr>
+<td><code>leaq i(,z,v),d</code></td>
+<td><code>i</code>+<code>z</code>*<code>v</code> -&gt; <code>d</code></td>
+<td>Add a constant to a scaled value</td>
+</tr>
+<tr>
+<td><code>leaq i(s,z,v),d</code></td>
+<td><code>i</code>+<code>s</code>+<code>z</code>*<code>v</code> -&gt; <code>d</code></td>
+<td>Do everything</td>
+</tr>
+</tbody>
+</table>
+<p>Note <code>v</code> and <code>i</code> are constants while <code>s</code>, <code>d</code> and <code>z</code> are resister names. The scale factors <code>v</code> can only be the constants 1, 2, 4, and 8</p>
+<h2 id="data-transfer-instructions">Data transfer instructions</h2>
+<p>Like with x86_64 <code>movq</code> are the instruction for loading and storing data. However, x86prime has limited the different ways that is can be used.</p>
+<table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>movq s,d</code></td>
+<td>reg-&gt;reg copy</td>
+</tr>
+<tr>
+<td><code>movq (s),d</code></td>
+<td>load (memory -&gt; reg copy)</td>
+</tr>
+<tr>
+<td><code>movq d,(s)</code></td>
+<td>store (reg -&gt; memory copy)</td>
+</tr>
+<tr>
+<td><code>movq $i,d</code></td>
+<td>constant -&gt; register</td>
+</tr>
+<tr>
+<td><code>movq i(s),d</code></td>
+<td>load (memory -&gt; reg copy)</td>
+</tr>
+<tr>
+<td><code>movq d,i(s)</code></td>
+<td>store (reg -&gt; memory copy)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conditional-and-unconditional-jumps">Conditional and unconditional jumps</h2>
+<p>Program flow control is where x86prime diverges significantly from x86_64. We have simply scrapped the concept of branch flags and instead uses conditional branches that includes simple branch expressions as seen in MIPS and RISC5.</p>
+<p>The most simple of the instructions are the unconditional jump, which follows x86. In the following <code>p</code> is the label at which the execution should continue.</p>
+<pre><code>jmp p
+</code></pre>
+
+<p>More interesting are the conditional jumps (also called branches). To avoid the branch flags of x86, we will instead use a compare-and-branch instruction. This means that an instruction <code>&lt;cb&gt;</code> takes two values and compares these using a specified two-argument Boolean operator. If this evaluates to true execution will jump to a label <code>p</code>; otherwise the next instruction will be executed. It can thus be seen a performing a compare followed by a branch instruction in x86.</p>
+<p>There are two way to give values to a compare-and-branch instruction. Either by comparing the values of two registers <code>s</code> and <code>d</code></p>
+<pre><code>&lt;cb&gt; s,d,p
+</code></pre>
+
+<p>or comparing the values of a register <code>d</code> to an intimidate <code>i</code>.</p>
+<pre><code>&lt;cb&gt; $i,d,p
+</code></pre>
+
+<p>Though the compare-and-branch instruction is not part of the original x86 instruction set, we ensure that the specific conditions in x86prime carry the same meaning as for x86. Thus</p>
+<ul>
+<li><code>cbe</code>:  Equal</li>
+<li><code>cbne</code>: Not equal</li>
+<li><code>cbl</code>:  less (signed)</li>
+<li><code>cble</code>: less or equal (signed)</li>
+<li><code>cbg</code>:  greater (signed)</li>
+<li><code>cbge</code>: greater or equal (signed)</li>
+<li><code>cba</code>:  above (unsigned)</li>
+<li><code>cbae</code>: above or equal (unsigned)</li>
+<li><code>cbb</code>:  below (unsigned)</li>
+<li><code>cbbe</code>: below or equal (unsigned)</li>
+</ul>
+<p>Note that signed and unsigned comparisons are different.</p>
+<p>For example, <code>cble %rdi,%rbp,target</code> evaluates if <code>%rdi</code> &lt;= <code>%rbp</code> (signed) then jump to <code>target</code>.</p>
+<h2 id="procedural-instructions">Procedural instructions</h2>
+<p>The final instructions of x86prime are the instructions procedure calls. There is one significant difference between these and the similar x86 instructions. Instead of implicitly pushing and popping the return address to/from the stack, the instructions are give a register name in which the return address is handled. Thus</p>
+<pre><code>call p,d
+</code></pre>
+
+<p>makes a function call to label <code>p</code> and stores the current program counter in register <code>d</code>, while</p>
+<pre><code>ret s
+</code></pre>
+
+<p>returns from function call, by using the value in register <code>s</code> as the return program counter.</p>
+<p>As an example a call/return to <code>procedure</code> will have to make sure to store the return address. By convention <code>primify</code> that converts an x86_64 program into an x86prime program uses <code>%r11</code> for the return address, but a programmer may choose any other register. Thus, when you make procedure calls in x86prime, you will often see the following code. For the call <code>%r11</code> is added to store the return address:</p>
+<pre><code>call procedure,%r11
+</code></pre>
+
+<p>When entering a procedure <code>%r11</code> is pushed to the call stack and again popped from the stack before the return. This is done to ensure that any usage of <code>%r11</code> in the procedure body will not overwrite the return address.</p>
+<pre><code>procedure:
+    subq $8, %rsp
+    movq %r11, (%rsp)
+
+    &lt;procedure body&gt;
+
+    movq (%rsp), %r11
+    addq $8, %rsp
+    ret %r11
+</code></pre>
+
+<p>Note that x86prime does not have instructions for pushing and popping the stack, so this has to be done by two instructions.</p>
+<p>Also, if <code>%r11</code> is not used inside the procedure body, these four instructions can be removed; however this is not done by the current translation.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../afviklingsplot/" class="btn btn-neutral float-right" title="Introduktion">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../afviklingsplot/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

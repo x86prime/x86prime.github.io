@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Kontrol afhængigheder - x86prime</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Kontrol afh\u00e6ngigheder";
+    var mkdocs_page_input_path = "afviklingsplot/kontrol.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> x86prime</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../x86prime/">x86prime</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Afviklingsplot</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../">Introduktion</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../pipeline/">Simpel pipeline</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../superscalar/">Superskalar</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../anonyme/">Anonyme Faser</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../out-of-order/">Out-of-order</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Kontrol afhængigheder</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#kontrol-afhngigheder">Kontrol afhængigheder</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#modellering">Modellering</a></li>
+        
+            <li><a class="toctree-l4" href="#spekulativ-udfrelse">spekulativ udførelse</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">x86prime</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
+    
+    <li>Kontrol afhængigheder</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="kontrol-afhngigheder">Kontrol afhængigheder</h1>
+<h2 id="modellering">Modellering</h2>
+<p>Vi modellerer effekten af hop, kald og retur ved at forsinke <code>F</code>.
+For kald og retur skelner vi mellem korrekte og fejlagtige
+forudsigelser. For betingede hop skelner vi tillige mellem om
+hoppet tages eller ej.</p>
+<p>Vi udtrykker effekten ved tildelinger til en ny tidsvariabel: NextF.time
+Og for enhver instruktion gælder altid at F.time &gt;= NextF.time</p>
+<p>Vi tilføjer en ny fase, <code>B</code>, specifik for betingede hop, kald og retur.
+<code>B</code> svarer til <code>X</code> for de aritmetiske instruktioner. <code>B</code> angiver det
+tidspunkt, hvor vi <em>afgør</em> om forudsigelser af instruktionen var korrekt
+eller ej. Vi tillader at <code>B</code> indtræffer out-of-order i forhold til andre 
+typer instruktioner, men kræver det sker in-order i forhold til andre
+hop, kald eller retur.</p>
+<pre><code>call a,b:   F----QBC
+ret  a:     F----QBC
+cbcc a,b,x: F----QBC
+inorder(B)
+</code></pre>
+
+<p>Her er nogle mulige regler for en out-of-order maskine som beskrevet ovenfor</p>
+<pre><code>Instruktion  Taget  Forudsagt    Effekt
+Call         ja     ja           NextF.time = F.time + 2
+Ret          ja     ja           NextF.time = F.time + 2
+             ja     nej          NextF.time = B.time + 1
+CBcc         nej    ja           - (ingen)
+             nej    nej          NextF.time = B.time + 1
+             ja     ja           NextF.time = F.time + 2
+             ja     nej          NextF.time = F.time + 2
+</code></pre>
+
+<p>Herunder ses to gennemløb af en indre løkke, hvor hop forudsiges korrekt.</p>
+<pre><code>                       012345678901234567
+loop: movq (r10),r11   F----QAM--C            r11.time = 10
+      addq $100,r11    F----Q----XC           r11.time = 11
+      movq r11,(r10)    F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10       F----QX----C          r10.time = 8
+      cbl  r10,r12,loop  F----QB----C             NextF.time = 4 (forudsagt korrekt taget)
+loop: movq (r10),r11       F----QAM--C            r11.time = 14
+      addq $100,r11        F----Q----XC           r11.time = 15
+      movq r11,(r10)        F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10           F----QX----C          r10.time = 12
+      cbl  r10,r12,loop      F----QB----C
+</code></pre>
+
+<p>Ydeevne: 5/4 IPC</p>
+<p>På grund af omkostningen ved hop vil en oversætter ofte rulle en løkke-krop
+ud en eller flere gange. Herunder ses effekten af en enkelt udrulning</p>
+<pre><code>                       012345678901234567
+loop: movq (r10),r11   F----QAM--C            r11.time = 10
+      addq $100,r11    F----Q----XC           r11.time = 11
+      movq r11,(r10)    F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10       F----QX----C          r10.time = 8
+      cbgt  r10,r12,exit F----QB----C         forudsagt korrekt ikke taget
+      movq (r10),r11     F----QAM---C         r11.time = 13
+      addq $100,r11       F----Q----XC        r11.time = 14
+      movq r11,(r10)      F----QAM--VC        X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10          F----QX----C       r10.time = 11
+      cbl  r10,r12,loop    F----QB----C       NextF.time = 6 (forudsagt korrekt taget)
+loop: movq (r10),r11         F----QAM--C      r11.time = 16
+</code></pre>
+
+<p>Ydeevne: 10/6 IPC</p>
+<p>En anden teknik til at skjule omkostningen ved tagne hop er at man dimensionerer
+forenden af mikroarkitektur (F til Q) lidt større end resten. Her er for eksempel
+et afviklingsplot for den ikke udrullede løkke på en maskine der kan håndtere 3
+instruktioner samtidigt i <code>F</code> til <code>Q</code>:</p>
+<pre><code>                       012345678901234567
+loop: movq (r10),r11   F----QAM--C            r11.time = 10
+      addq $100,r11    F----Q----XC           r11.time = 11
+      movq r11,(r10)   F----Q-AM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10       F----QX----C          r10.time = 8
+      cbl  r10,r12,loop F----Q-B----C            NextF.time = 3 (forudsagt korrekt taget)
+loop: movq (r10),r11      F----QAM--C            r11.time = 14
+      addq $100,r11       F----Q----XC           r11.time = 15
+      movq r11,(r10)      F----Q-AM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10          F----QX----C          r10.time = 12
+      cbl  r10,r12,loop    F----Q-B----C
+</code></pre>
+
+<p>Ydeevne: 5/3 IPC</p>
+<p>Her ses effekten af en forkert forudsigelse:</p>
+<pre><code>                       012345678901234567
+loop: movq (r10),r11   F----QAM--C            r11.time = 10
+      addq $100,r11    F----Q----XC           r11.time = 11
+      movq r11,(r10)    F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10       F----QX----C          r10.time = 8
+      cbl  r10,r12,loop  F----QB----C         NextF.time = 9 (forudsagt forkert)
+loop: movq (r10),r11            F----QAM--C            r11.time = 14
+      addq $100,r11             F----Q----XC           r11.time = 15
+      movq r11,(r10)             F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
+      addq $8,r10                F----QX----C          r10.time = 12
+</code></pre>
+
+<p>Ydeevne 5/9 IPC</p>
+<p>Jo længere pipeline, jo større omkostning ved forkerte forudsigelser.</p>
+<h2 id="spekulativ-udfrelse">spekulativ udførelse</h2>
+<p>Det kan ske at <code>B</code> fasen indtræffer meget sent i forhold til udførelsen
+af andre instruktioner. Betragt for eksempel nedenstående stump kode</p>
+<pre><code>    long v = tab[j];
+    if (v &gt; key) {
+      *ptr = *ptr + 1; // found it!
+    }
+</code></pre>
+
+<p>Oversat til x86prime kan det blive til følgende programstump:</p>
+<pre><code>        movq (r10,r11,8),r12
+        cble r12,r13,.endif
+        movq (r15),r14
+        addq $1,r14
+        movq r14,(r15)
+.endif:
+</code></pre>
+
+<p>og lad os antage at variablen <code>tab</code> befinder sig i L2-cache, mens området
+udpeget af variablen <code>ptr</code> er i L1-cache. Lad os antage at L2-cache tilgang
+koster 10 cykler (oveni L1-tilgang).</p>
+<pre><code>                              01234567890123456789012
+        movq (r10,r11,8),r12  F----QAM------------C
+        cble r12,r13,else     F----Q--------------BC
+        movq (r15),r14         F----QAM------------C
+        addq $1,r14            F----Q----X----------C
+        movq r14,(r15)          F----QAM--V---------C
+</code></pre>
+
+<p>Det betingede hop afhænger af en instruktion der er nød til at hente en værdi
+i L2 og bliver således forsinket så det først kan afgøres i cyklus 20.</p>
+<p>Hoppet er forudsagt "ikke taget" og før det afgøres kan de næste tre instruktioner
+læse fra L1-cachen, beregne en ny værdi og lægge den i kø til skrivning til L1.</p>
+<p>Det går selvsagt ikke an faktisk at opdatere L1, før vi ved om hoppet er
+forudsagt korrekt, men alle øvrige aktiviteter kan gennemføres. De instruktioner
+som udføres tidligere end et eller flere hop, kald eller retur, som de egentlig
+afhænger af, siges at være spekulativt udført. Spekulativ udførelse fjerner en
+væsentlig begrænsning på hvor meget arbejde der kan udføres parallelt.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../out-of-order/" class="btn btn-neutral" title="Out-of-order"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../out-of-order/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>
