@@ -139,13 +139,14 @@
             <div class="section">
               
                 <h1 id="afviklings-plot-execution-graph">Afviklings Plot (Execution graph)</h1>
-<p>af Finn Schiermer Andersen og Michael Kirkedal Thomsen, DIKU, 2019</p>
+<p><em>af Finn Schiermer Andersen og Michael Kirkedal Thomsen, DIKU, 2019</em></p>
 <p>Denne lille note introducerer afviklingsplot.</p>
 <p>Et afviklingsplot er en idealiseret illustration af hvordan en mikroarkitektur
 afvikler en strøm af instruktioner. Men det er også et redskab som kan bruges
 til at bestemme CPI (cycles per instruction), et vigtig mål for en mikroarkitekturs 
 ydeevne for en strøm af instruktioner. (Det andet vigtige mål er selvfølgelig
 maskinens clock-frekvens)</p>
+<p>Vi vil lave en gradvis opbygning og langsomt øve kompleksiteten. Dvs. vi starter her med en kort beskrivelse, eksemplificeret på en enkelt-cyklus maskine. Derefter vil vi beskrive hvordan det fungerer på en <a href="pipeline/">simpel pipeline maskine</a>, hvilket vil give en dybere forståelse. Derefter vil vi bevæge os over <a href="superscalar/">superskalar arkitekturer</a> til en mere <a href="anonyme/">avanceret pipeline mikroarkitektur</a>.</p>
 <h2 id="ide">Idè</h2>
 <p>Under afvikling af hver instruktion på en given mikroarkitektur gennemgår
 instruktionen forskellige faser. Et afviklingsplot angiver tidspunktet
