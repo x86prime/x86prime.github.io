@@ -79,28 +79,6 @@
                     
     <a class="" href="../anonyme/">Avanceret pipeline, anonyme faser</a>
                 </li>
-                <li class=" current">
-                    
-    <a class="current" href="./">Out-of-order</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#out-of-order">Out-of-order</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</a></li>
-        
-            <li><a class="toctree-l4" href="#standardmodellen-for-out-of-order-mikroarkitektur">Standardmodellen for out-of-order mikroarkitektur</a></li>
-        
-        </ul>
-    
-
-    </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
-                </li>
     </ul>
 	    </li>
           
@@ -125,10 +103,6 @@
     <li><a href="../..">Docs</a> &raquo;</li>
     
       
-        
-          <li>Afviklingsplot &raquo;</li>
-        
-      
     
     <li>Out-of-order</li>
     <li class="wy-breadcrumbs-aside">
@@ -143,11 +117,11 @@
                 <h1 id="out-of-order">Out-of-order</h1>
 <h2 id="faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</h2>
 <p>Man kunne jo forestille sig:</p>
-<pre><code>                 012345678
-movq (r10),r11   FDXMW          r11.time = 4
-addq $100,r11    FDDDXW         X.time &gt;= r11.time -&gt; Forsinket X, Gentag D, r11.time = 5
-movq r9,(r14)     FDXM          X.time &gt;= r14.time, M.time &gt;= r9.time  &lt;---- BEMÆRK!
-addq $1,r10       FFDXXW        resB -&gt; Gentag F, r10.time = 5 (eller 6)
+<pre><code>                 0123456     -- Bemærkning
+movq (r10),r11   FDXMW       -- r11 er klar efter 4 clocks
+addq $100,r11    FDDDXW      -- da instruktionen er afhængig af r11 staller vi i D
+movq r9,(r14)     FDXM       -- ingen afhængighed, så hvorfor vente?  &lt;---- BEMÆRK!
+addq $1,r10       FFDXXW     -- resB -&gt; Gentag F, r10.time = 5 (eller 6)
 </code></pre>
 
 <p>Bemærk at instruktion nummer 3 her får sin X-fase en clock periode tidligere end instruktionen
@@ -196,23 +170,43 @@ fra skrive-køen. Instruktioner der skriver til lageret kan (skal) indsætte
 deres adresse i skrive-køen selvom den værdi der skal skrives endnu ikke
 er beregnet. Det tidspunkt hvor værdien kopieres til skrive-køen markeres <code>V</code>.</p>
 <h3 id="en-lille-out-of-order-model">En lille out-of-order model</h3>
-<p>Her er en model af en lille out-of-order maskine</p>
-<pre><code>aritmetik:  F----QXC
-movq (a),b: F----QAM--C
-movq b,(a): F----QAMVC
-
-dataafhængigheder:
-aritmetik a op b: X.time &gt;= max(a.time, b.time); b.time = X.time + 1
-movq (a),b: A.time &gt;= a.time; M.time &gt;= MEM[a].time; b.time = M.time + 3
-movq b,(a): A.time &gt;= a.time, V.time &gt;= b.time; MEM[a].time = V.time + 1
-
-inorder(F,Q,C,A)
-outoforder(X,M)
-resB: max pr clk: F:2, Q:2, X:2, A:1, M:1, V:1, C:2
-resC: max pr clk: F-Q: 8, M-W: 2, Q-C: 32
-resD: unbounded: Q-X, Q-A, A-M, M-V, V-C, M-C
-</code></pre>
-
+<p>Her er en model af en lille out-of-order maskine:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>F----QXC</code></td>
+<td><code>depend(X,a), depend(X,b), produce(C,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>F----QAM--C</code></td>
+<td><code>depend(A,a), produce(C,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>F----QAMVC</code></td>
+<td><code>depend(A,a), depend(M,b), produce(V,a)</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:2</code>, <code>Q:2</code>, <code>X:2</code>, <code>A:1</code>, <code>M:1</code>, <code>V:1</code>, <code>C:2</code></li>
+<li>Antal instruktioner under beregning: <code>F-Q: 8</code>, <code>M-W: 2</code>, <code>Q-C: 32</code></li>
+<li><code>inorder(F,Q,C,A)</code></li>
+<li><code>outoforder(X,M)</code></li>
+</ul>
 <p>Bemærk at udover at faserne X og M nu er erklæret out-of-order, så er
 der indsat en begrænsning på 32 instruktioner fra Q til C. Det vil sige
 vi tillader 32 instruktioner at være i forskellige faser mellem Q og C.
@@ -222,15 +216,15 @@ kan maskinen "se fremad" i instruktionsstrømmen.</p>
 længere noget krav om X skal følge i en bestemt afstand efter Q, eller
 at C skal følge i en bestemt afstand efter X eller M.</p>
 <p>Disse begrænsninger ville give følgende udførelse</p>
-<pre><code>                 012345678901234567
-movq (r10),r11   F----QAM--C            r11.time = 10
-addq $100,r11    F----Q----XC           r11.time = 11
-movq r11,(r10)    F----QAM--VC          X.time &gt;= r10.time, V.time &gt;= r11.time
-addq $8,r10       F----QX----C          r10.time = 8
-movq (r10),r11     F----QAM---C         X.time &gt;= r10.time, r11.time = 12
-addq $100,r11      F----Q----XC         X.time &gt;= r11.time, r11.time = 13
-movq r11,(r10)      F----QAM--VC        X.time &gt;= r10.time, V.time &gt;= r11.time
-addq $8,r10         F----QX----C        r10.time = 10
+<pre><code>                 012345678901234      -- Vigtigste bemærkninger
+movq (r10),r11   F----QAM--C          -- produce(C,r11)
+addq $100,r11    F----Q----XC         -- depend(X,r11), produce(C,r11) 
+movq r11,(r10)    F----QAM--VC        -- depend(A,r10), depend(M,r11)
+addq $8,r10       F----QX----C        -- produce(C,r10)
+movq (r10),r11     F----QAM---C       -- depend(A,r10), produce(C,r11)
+addq $100,r11      F----Q----XC       -- depend(X,r11), produce(C,r11)
+movq r11,(r10)      F----QAM--VC      -- depend(A,r10), depend(M,r11)
+addq $8,r10         F----QX----C      -- depend(X,r10), produce(C,r10)
 </code></pre>
 
 <p>Med en gennemsnitlig ydeevne på 2 IPC.</p>
@@ -239,15 +233,6 @@ addq $8,r10         F----QX----C        r10.time = 10
             </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../kontrol/" class="btn btn-neutral float-right" title="Kontrol afhængigheder">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../anonyme/" class="btn btn-neutral" title="Avanceret pipeline, anonyme faser"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -271,10 +256,6 @@ addq $8,r10         F----QX----C        r10.time = 10
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../anonyme/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../kontrol/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

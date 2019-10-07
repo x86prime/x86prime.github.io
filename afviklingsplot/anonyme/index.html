@@ -88,7 +88,7 @@
         
             <li><a class="toctree-l4" href="#eksempel-1-avanceret-pipeline">Eksempel 1: Avanceret pipeline</a></li>
         
-            <li><a class="toctree-l4" href="#abstraktion-samlet-indlsning-afkodning">Abstraktion, samlet indlæsning afkodning</a></li>
+            <li><a class="toctree-l4" href="#abstraktion-samlet-indlsning-og-afkodning">Abstraktion, samlet indlæsning og afkodning</a></li>
         
             <li><a class="toctree-l4" href="#eksempel-2-mere-udrulning">Eksempel 2: Mere udrulning</a></li>
         
@@ -96,18 +96,12 @@
         
             <li><a class="toctree-l4" href="#cache-miss">Cache-miss</a></li>
         
+            <li><a class="toctree-l4" href="#kontrolafhngigheder">Kontrolafhængigheder</a></li>
+        
         </ul>
     
 
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../out-of-order/">Out-of-order</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../kontrol/">Kontrol afhængigheder</a>
                 </li>
     </ul>
 	    </li>
@@ -205,7 +199,7 @@ Det ses af faserne. Her har vi indsat to anonyme faser <code>-</code> efter <cod
 <p>Vi kan nu sætte de udvidede specifikationer for faserne som</p>
 <ul>
 <li>Tilgængelige ressourcer: <code>F:2</code>, <code>D:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
-<li>Antal instruktioner underberegning: <code>F-D: 4</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
+<li>Antal instruktioner under beregning: <code>F-D: 4</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
 <li><code>inorder(F,D,X,M,W)</code></li>
 </ul>
 <p>Vi har det samme antal ressourcer som i vores superskalar arkitektur, men kan nu have 4 ekstra instruktioner i de anonyme faser mellem <code>F</code> og <code>D</code>; altså i gang med at blive indhentet. Der er 2 ekstra mellem <code>D</code> og <code>X</code>, samt 2 ekstra mellem <code>M</code> og <code>W</code>. Det er implicit at der ikke kan være nogen mellem <code>X</code> og <code>M</code> da det her kun tager en clock periode at beregne en værdi.
@@ -233,8 +227,8 @@ addq $8,r10         F------DDDDD-XW    -- depend(X,r10), produce(W,r10)
 <li>instruktion er igen en masse stall efter <code>F</code> og derefter <code>D</code>. Vi har først en afhængig på <code>r10</code> i <code>X</code> som kommer fra fjerde instruktion; vi har dog en in-order maskine og kan derfor ikke ligge adresseberegningen tidligere end <code>X</code> fra den forrige instruktion. Dette løser også afhængigheden på <code>r11</code> i <code>M</code>, da denne bliver produceret i forrige instruktions <code>W</code>.</li>
 <li>instruktion forsinkes både i <code>F</code> og <code>D</code>, som tidligere. Ellers er der ikke noget at bemærke.</li>
 </ol>
-<h2 id="abstraktion-samlet-indlsning-afkodning">Abstraktion, samlet indlæsning afkodning</h2>
-<p>Anonyme faser også gøre det nemmere at se bort fra ting der ikke har interesse.
+<h2 id="abstraktion-samlet-indlsning-og-afkodning">Abstraktion, samlet indlæsning og afkodning</h2>
+<p>Anonyme faser kan også gøre det nemmere at se bort fra ting der ikke har interesse.
 For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, da det altid følger direkte efter indhentning og har samme antal ressourcer. I stedet kan vi lave vores indlæsningstrin det længere og få samme afvikling:</p>
 <table>
 <thead>
@@ -268,7 +262,7 @@ For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, da det alti
 </table>
 <ul>
 <li>Tilgængelige ressourcer: <code>F:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
-<li>Antal instruktioner underberegning: <code>F-X: 8</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
+<li>Antal instruktioner under beregning: <code>F-X: 8</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
 <li><code>inorder(F,D,X,M,W)</code></li>
 </ul>
 <p>Dette giver den samme afvikling, blot er <code>D</code> ikke nævnt, men til gængæld kan det være mere overskueligt.</p>
@@ -284,51 +278,59 @@ addq $8,r10         F------------XW    -- depend(X,r10), produce(W,r10)
 </code></pre>
 
 <p>Bemærk iøvrigt at selvom denne maskine kan håndtere 2 instruktioner per clk, så
-opnår den i ovenstående eksempel 8/11 IPC, dvs. mindre end 1 instruktion per clk.</p>
+opnår den i ovenstående eksempel 4/9 IPC, dvs. mindre end ½ instruktion per clk.</p>
 <h2 id="eksempel-2-mere-udrulning">Eksempel 2: Mere udrulning</h2>
-<p>Det ligning at vi nu bare kan indhente instruktioner, som vi lyster. Så når vi nu er så godt i gang kan vi tage en udrulning mere.</p>
-<pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
-movq (r10),r11   F----XM--W            -- produce(W,r11)
-addq $100,r11    F--------XW           -- depend(X,r11), produce(W,r11)
-movq r11,(r10)    F-------XM           -- depend(M,r11), depend(M,r11)
-addq $8,r10       F--------XW          -- produce(W,r10)
-movq (r10),r11     F--------XM--W      -- depend(X,r10), produce(W,r11)
-addq $100,r11      F------------XW     -- depend(X,r11), produce(W,r11)
-movq r11,(r10)      F-----------XM     -- depend(X,r10), depend(M,r11)
-addq $8,r10         F------------XW    -- depend(X,r10), produce(W,r10)
+<p>Det ser ud til at vi nu bare kan indhente instruktioner, som vi lyster. Så når vi nu er så godt i gang, kan vi tage en udrulning mere.</p>
+<pre><code class="text">                 012345678901234567890123    -- Vigtigste bemærkning
+movq (r10),r11   F----XM--W                  -- produce(W,r11)
+addq $100,r11    F--------XW                 -- depend(X,r11), produce(W,r11)
+movq r11,(r10)    F-------XM                 -- depend(M,r11), depend(M,r11)
+addq $8,r10       F--------XW                -- produce(W,r10)
+movq (r10),r11     F--------XM--W            -- depend(X,r10), produce(W,r11)
+addq $100,r11      F------------XW           -- depend(X,r11), produce(W,r11)
+movq r11,(r10)      F-----------XM           -- depend(X,r10), depend(M,r11)
+addq $8,r10         F------------XW          -- depend(X,r10), produce(W,r10)
 movq (r10),r11       F------------XM--W      -- depend(X,r10), produce(W,r11)
 addq $100,r11        FFFFF------------XW     -- depend(X,r11), produce(W,r11)
 movq r11,(r10)        FFFF------------XM     -- depend(X,r10), depend(M,r11)
 addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
 </code></pre>
 
-<ul>
-<li>
 <ol>
 <li>instruktion kan starte indhentning som normalt. Hvis vi tæller antallet af streger over dette <code>F</code> (hold tungen lige i munden) tæller vi 8, som er plads til. I den efterfølgende periode (nummer 5) fortsætter først instruktion til <code>X</code>, så denne instruktion kan fortsætte sin indlæsning. Så skal vi bare huske vores afhængighed på <code>r10</code>.</li>
-</ol>
-</li>
-<li>
-<ol>
 <li>instruktion kan starte indhentning med den tidligere. Men nu er de anonyme faser fulde og vi bliver nødt til at blive i <code>F</code>. Afslutningen følger de tidligere iterationer.</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>Vi han starte indlæsningen i periode 5, men er igen nødt til at stalle i <code>F</code>.</li>
-</ol>
-</li>
-<li>
-<ol>
+<li>Vi kan starte indlæsningen i periode 5, men er igen nødt til at stalle i <code>F</code>.</li>
 <li>Nu er <code>F</code> også blevet fyldt og vi er nødt til forsinke selve indlæsningen. Det er først i periode 9 at anden instruktion komme ud af sin indlæsning og vi kan derfor starte denne.</li>
 </ol>
-</li>
-</ul>
 <p>Det man især kan tage med fra ovenstående eksempel, er hvor mange instruktioner, som er i gang med at blive indlæst og hvor lang tid denne del tager sammenlignet med selve beregningen.</p>
 <h2 id="ker">Køer</h2>
-<p>TBD</p>
+<p>Ofte indgår køer af instruktioner i en mikroarkitektur. Ikke så tit i en simpel skalar pipeline,
+men ofte i superskalare pipelines. For eksempel er det ofte en fordel med en kø mellem instruktionshentning
+og afkodning. For maskiner med variabel-længde instruktioner kan det være nødvendigt fordi afkoderen
+har en begrænsning på hvor mange instruktioner den kan håndtere, mens instruktionshentningen har en
+begrænsning udtrykt i bytes eller cache-blokke. Dermed kan man undgå at indlæse samme instruktion flere gange. Dette mis-match afføder et behov for at have en eller
+flere bytes/instruktioner i kø mellem de to trin.</p>
+<p>Vi vil modellerer en kø som et antal anonyme faser.
+For eksempel kan vi udtrykke en kø mellem F og D med plads til fire instruktioner som en ressource begrænsning: "F-D: 4"</p>
 <h2 id="cache-miss">Cache-miss</h2>
-<p>TBD</p>
+<p>Vi modellerer lager-hierarkiet ved at holde rede på indholdet af systemets cache(s) instruktion
+for instruktion. Cache-miss inkluderes i modellen alene derved at det påvirker latens-tiden for
+de instruktioner, der læser fra lageret. Dette er en voldsom forsimpling. Vi ser således bort fra
+en række typiske begrænsninger:</p>
+<ul>
+<li>I en helt simpel pipeline vil man måske fryse selve pipelinen indtil data er ankommet.
+   Det vil have dårligere ydeevne, end blot at forøge latenstiden, som vi gør.</li>
+<li>Der kan være et begrænset antal overlappende læsninger i gang samtidigt.</li>
+<li>Der kan være et begrænset antal snavsede blokke som er smidt ud på et niveau
+   af hierarkiet og venter i kø på at blive skrevet til det underliggende niveau.</li>
+<li>Der kan være ressource konflikter ved tilgang til en cache; f.eks. kan man måske
+   ikke læse fra cachen, samtidigt med at data der hentes i respons på et tidligere
+   miss ankommer og skrives til cachen.</li>
+</ul>
+<p>Det ser vi alt sammen bort fra.</p>
+<p>Der antages copy-back caching med LRU replacement.</p>
+<h2 id="kontrolafhngigheder">Kontrolafhængigheder</h2>
+<p>MKT skriv her.</p>
 <p>&nbsp;</p>
               
             </div>
@@ -336,8 +338,6 @@ addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../out-of-order/" class="btn btn-neutral float-right" title="Out-of-order">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../superscalar/" class="btn btn-neutral" title="Superskalar"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -368,8 +368,6 @@ addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
       
         <span><a href="../superscalar/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../out-of-order/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
