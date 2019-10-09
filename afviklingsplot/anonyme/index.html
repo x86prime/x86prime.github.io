@@ -103,6 +103,10 @@
 
     </ul>
                 </li>
+                <li class="">
+                    
+    <a class="" href="../out-of-order/">Out-of-order</a>
+                </li>
     </ul>
 	    </li>
           
@@ -143,6 +147,8 @@
             <div class="section">
               
                 <h1 id="avanceret-pipeline-anonyme-faser">Avanceret pipeline, anonyme faser</h1>
+<!-- Kunne være godt hvis der er tydelig forskel på stall og fase -->
+
 <p>Det er lidt træls, hvis man skal redegøre separat for hver enkelt fase en instruktion
 gennemløber i en moderne mikroarkitektur. Det skyldes at moderne mikroarkitekturer
 afvikler instruktioner i mange forskellige faser og disse faser kan tage forskellig længde.</p>
@@ -178,13 +184,13 @@ F, men ikke påbegyndt D. Med andre ord: Fase <code>D</code> skal følge direkte
 <td>Aritmetik</td>
 <td><code>op  a b</code></td>
 <td><code>F--D-XW</code></td>
-<td><code>depend(X,a), depend(X,b), produce(W,b)</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
 </tr>
 <tr>
 <td>Læsning</td>
 <td><code>movq (a),b</code></td>
 <td><code>F--D-XM--W</code></td>
-<td><code>depend(X,a), produce(W,b)</code></td>
+<td><code>depend(X,a), produce(M+2,b)</code></td>
 </tr>
 <tr>
 <td>Skrivning</td>
@@ -194,8 +200,8 @@ F, men ikke påbegyndt D. Med andre ord: Fase <code>D</code> skal følge direkte
 </tr>
 </tbody>
 </table>
-<p>Dataafhængighederne er de samme som tidligere, men den undtagelse at aritmetik instruktionerne, nu ikke har en <code>M</code> fase og derfor producerer deres resultat til fase <code>W</code>.
-Det ses af faserne. Her har vi indsat to anonyme faser <code>-</code> efter <code>F</code> og <code>M</code> for at definerer cache adgang tager i alt 3 clock perioder. På samme måde kan vi se at afkodningen i <code>D</code> nu tager 2 clock perioder. Vi kan stadig lave stalls in disse anonyme faser, så det er muligt at der er flere end antallet mellem to givne faser.</p>
+<p>Dataafhængighederne er de samme som tidligere, men den undtagelse at aritmetik instruktionerne, nu ikke har en <code>M</code> fase og derfor producerer deres resultat til i fase <code>X</code> til fase <code>W</code>.
+Det ses af faserne. Her har vi indsat to anonyme faser <code>-</code> efter <code>F</code> og <code>M</code> for at definerer cache adgang tager i alt 3 clock perioder. På samme måde kan vi se at afkodningen i <code>D</code> nu tager 2 clock perioder. Vi kan stadig lave stalls in disse anonyme faser, så det er muligt at der er flere end antallet mellem to givne faser. Ved læsning definerer vi at resultatet til <code>b</code> er klar 2 skridt efter </p>
 <p>Vi kan nu sætte de udvidede specifikationer for faserne som</p>
 <ul>
 <li>Tilgængelige ressourcer: <code>F:2</code>, <code>D:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
@@ -206,14 +212,14 @@ Det ses af faserne. Her har vi indsat to anonyme faser <code>-</code> efter <cod
 Vi sikre stadig at alle faser afvikles in-order.</p>
 <p>Se følgende eksempel på en kørsel af et program; læg mærke til at vi har to iterationer at en opdatering at et array:</p>
 <pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
-movq (r10),r11   F--D-XM--W            -- produce(W,r11)
-addq $100,r11    F--D-----XW           -- depend(X,r11), produce(W,r11)
+movq (r10),r11   F--D-XM--W            -- produce(M+2,r11)
+addq $100,r11    F--D-----XW           -- depend(X,r11), produce(X,r11)
 movq r11,(r10)    F--D----XM           -- depend(M,r11), depend(M,r11)
-addq $8,r10       F--DDDDD-XW          -- produce(W,r10)
-movq (r10),r11     F--DDDD--XM--W      -- depend(X,r10), produce(W,r11)
-addq $100,r11      F------D-----XW     -- depend(X,r11), produce(W,r11)
+addq $8,r10       F--DDDDD-XW          -- produce(X,r10)
+movq (r10),r11     F--DDDD--XM--W      -- depend(X,r10), produce(M+2,r11)
+addq $100,r11      F------D-----XW     -- depend(X,r11), produce(X,r11)
 movq r11,(r10)      F-----DD----XM     -- depend(X,r10), depend(M,r11)
-addq $8,r10         F------DDDDD-XW    -- depend(X,r10), produce(W,r10)
+addq $8,r10         F------DDDDD-XW    -- depend(X,r10), produce(X,r10)
 </code></pre>
 
 <p>Nu begynder der at ske en del. </p>
@@ -244,13 +250,13 @@ For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, da det alti
 <td>Aritmetik</td>
 <td><code>op  a b</code></td>
 <td><code>F----XW</code></td>
-<td><code>depend(X,a), depend(X,b), produce(W,b)</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
 </tr>
 <tr>
 <td>Læsning</td>
 <td><code>movq (a),b</code></td>
 <td><code>F----XM--W</code></td>
-<td><code>depend(X,a), produce(W,b)</code></td>
+<td><code>depend(X,a), produce(M+2,b)</code></td>
 </tr>
 <tr>
 <td>Skrivning</td>
@@ -262,19 +268,19 @@ For eksempel kan vi udelade afkodningstrinnet fra vores beskrivelse, da det alti
 </table>
 <ul>
 <li>Tilgængelige ressourcer: <code>F:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
-<li>Antal instruktioner under beregning: <code>F-X: 8</code>, <code>D-X: 2</code>, <code>M-W: 2</code></li>
+<li>Antal instruktioner under beregning: <code>F-X: 8</code>, <code>M-W: 2</code></li>
 <li><code>inorder(F,D,X,M,W)</code></li>
 </ul>
 <p>Dette giver den samme afvikling, blot er <code>D</code> ikke nævnt, men til gængæld kan det være mere overskueligt.</p>
 <pre><code class="text">                 012345678901234567    -- Vigtigste bemærkning
-movq (r10),r11   F----XM--W            -- produce(W,r11)
-addq $100,r11    F--------XW           -- depend(X,r11), produce(W,r11)
+movq (r10),r11   F----XM--W            -- produce(M+2,r11)
+addq $100,r11    F--------XW           -- depend(X,r11), produce(X,r11)
 movq r11,(r10)    F-------XM           -- depend(M,r11), depend(M,r11)
-addq $8,r10       F--------XW          -- produce(W,r10)
-movq (r10),r11     F--------XM--W      -- depend(X,r10), produce(W,r11)
-addq $100,r11      F------------XW     -- depend(X,r11), produce(W,r11)
+addq $8,r10       F--------XW          -- produce(X,r10)
+movq (r10),r11     F--------XM--W      -- depend(X,r10), produce(M+2,r11)
+addq $100,r11      F------------XW     -- depend(X,r11), produce(X,r11)
 movq r11,(r10)      F-----------XM     -- depend(X,r10), depend(M,r11)
-addq $8,r10         F------------XW    -- depend(X,r10), produce(W,r10)
+addq $8,r10         F------------XW    -- depend(X,r10), produce(X,r10)
 </code></pre>
 
 <p>Bemærk iøvrigt at selvom denne maskine kan håndtere 2 instruktioner per clk, så
@@ -282,18 +288,18 @@ opnår den i ovenstående eksempel 4/9 IPC, dvs. mindre end ½ instruktion per c
 <h2 id="eksempel-2-mere-udrulning">Eksempel 2: Mere udrulning</h2>
 <p>Det ser ud til at vi nu bare kan indhente instruktioner, som vi lyster. Så når vi nu er så godt i gang, kan vi tage en udrulning mere.</p>
 <pre><code class="text">                 012345678901234567890123    -- Vigtigste bemærkning
-movq (r10),r11   F----XM--W                  -- produce(W,r11)
-addq $100,r11    F--------XW                 -- depend(X,r11), produce(W,r11)
+movq (r10),r11   F----XM--W                  -- produce(M+2,r11)
+addq $100,r11    F--------XW                 -- depend(X,r11), produce(X,r11)
 movq r11,(r10)    F-------XM                 -- depend(M,r11), depend(M,r11)
-addq $8,r10       F--------XW                -- produce(W,r10)
-movq (r10),r11     F--------XM--W            -- depend(X,r10), produce(W,r11)
-addq $100,r11      F------------XW           -- depend(X,r11), produce(W,r11)
+addq $8,r10       F--------XW                -- produce(X,r10)
+movq (r10),r11     F--------XM--W            -- depend(X,r10), produce(M+2,r11)
+addq $100,r11      F------------XW           -- depend(X,r11), produce(X,r11)
 movq r11,(r10)      F-----------XM           -- depend(X,r10), depend(M,r11)
-addq $8,r10         F------------XW          -- depend(X,r10), produce(W,r10)
-movq (r10),r11       F------------XM--W      -- depend(X,r10), produce(W,r11)
-addq $100,r11        FFFFF------------XW     -- depend(X,r11), produce(W,r11)
+addq $8,r10         F------------XW          -- depend(X,r10), produce(X,r10)
+movq (r10),r11       F------------XM--W      -- depend(X,r10), produce(M+2,r11)
+addq $100,r11        FFFFF------------XW     -- depend(X,r11), produce(X,r11)
 movq r11,(r10)        FFFF------------XM     -- depend(X,r10), depend(M,r11)
-addq $8,r10               F------------XW    -- depend(X,r10), produce(W,r10)
+addq $8,r10               F------------XW    -- depend(X,r10), produce(X,r10)
 </code></pre>
 
 <ol>
@@ -339,6 +345,8 @@ en række typiske begrænsninger:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../out-of-order/" class="btn btn-neutral float-right" title="Out-of-order">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
       
         <a href="../superscalar/" class="btn btn-neutral" title="Superskalar"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
@@ -368,6 +376,8 @@ en række typiske begrænsninger:</p>
       
         <span><a href="../superscalar/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
+      
+        <span style="margin-left: 15px"><a href="../out-of-order/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

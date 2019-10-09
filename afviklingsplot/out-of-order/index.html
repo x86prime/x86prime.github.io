@@ -79,6 +79,24 @@
                     
     <a class="" href="../anonyme/">Avanceret pipeline, anonyme faser</a>
                 </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Out-of-order</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#out-of-order-eksekvering">Out-of-order eksekvering</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</a></li>
+        
+            <li><a class="toctree-l4" href="#standardmodellen-for-out-of-order-mikroarkitektur">Standardmodellen for out-of-order mikroarkitektur</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
     </ul>
 	    </li>
           
@@ -103,6 +121,10 @@
     <li><a href="../..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Afviklingsplot &raquo;</li>
+        
+      
     
     <li>Out-of-order</li>
     <li class="wy-breadcrumbs-aside">
@@ -114,40 +136,79 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="out-of-order">Out-of-order</h1>
+                <h1 id="out-of-order-eksekvering">Out-of-order eksekvering</h1>
+<!-- Overvej afhængighed på data skrivning!!! -->
+
+<p>Idéen om out-of-order eksekvering (også kaldet dynamic scheduling) af kode er så gammel som processoren selv. Det er dog ret svært at implementerer, så I mange år fandtes det kun som en mulig program optimering, som nævnt tidligere. Vi skal derfor helt frem til starten af 90'erne før det var en gængs del at mikroprocessorer.</p>
 <h2 id="faser-i-program-rkkeflge-eller-ej">Faser i program-rækkefølge - eller ej</h2>
-<p>Man kunne jo forestille sig:</p>
-<pre><code>                 0123456     -- Bemærkning
-movq (r10),r11   FDXMW       -- r11 er klar efter 4 clocks
-addq $100,r11    FDDDXW      -- da instruktionen er afhængig af r11 staller vi i D
-movq r9,(r14)     FDXM       -- ingen afhængighed, så hvorfor vente?  &lt;---- BEMÆRK!
-addq $1,r10       FFDXXW     -- resB -&gt; Gentag F, r10.time = 5 (eller 6)
+<p>Overvej afviklingen i følgende simple superskalar pipeline, hvor</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Instruktion</th>
+<th>Faser</th>
+<th>Dataafhængigheder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aritmetik</td>
+<td><code>op  a b</code></td>
+<td><code>F--XW</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
+</tr>
+<tr>
+<td>Læsning</td>
+<td><code>movq (a),b</code></td>
+<td><code>F--XM-W</code></td>
+<td><code>depend(X,a), produce(M+1,b)</code></td>
+</tr>
+<tr>
+<td>Skrivning</td>
+<td><code>movq b,(a)</code></td>
+<td><code>F--XM</code></td>
+<td><code>depend(X,a), depend(M,b)</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Tilgængelige ressourcer: <code>F:2</code>, <code>X:2</code>, <code>M:1</code>, <code>W:2</code></li>
+<li>Antal instruktioner under beregning: <code>F-X: 4</code>, <code>M-W: 1</code></li>
+</ul>
+<pre><code>                 01234567      -- Bemærkning
+movq (r10),r11   F--XM-W       -- produce(W,r11)
+addq $100,r11    F-----XW      -- depend(X,r11), stall F til r11 er klar
+movq r9,(r14)     F--XM        -- ingen afhængighed, så hvorfor vente?  &lt;---- BEMÆRK!
+addq $1,r10       F--XW        -- ingen afhængighed
 </code></pre>
 
-<p>Bemærk at instruktion nummer 3 her får sin X-fase en clock periode tidligere end instruktionen
-før. På en måde overhaler instruktion nummer 3 altså instruktion nummer 2.</p>
-<p>Men det tillader vores inorder() erklæring ikke og giver os i stedet:</p>
-<pre><code>                 012345678
-movq (r10),r11   FDXMW          r11.time = 4
-addq $100,r11    FDDDXW         X.time &gt;= r11.time -&gt; Forsinket X, Gentag D, r11.time = 5
-movq r9,(r14)     FDDXM         inorder(X) -&gt; Forsinket X, vent i D, X.time &gt;= r14.time, M.time &gt;= r9.time
-addq $1,r10       FFFDXW        resB -&gt; Gentag F, r10.time = 7
+<p>Bemærk at instruktion nummer 3 og 4 her får sin X-fase en clock periode tidligere end instruktionen
+før. På en måde overhaler instruktion nummer 3 og 4 altså instruktion nummer 2.</p>
+<p>Det er ikke noget som bryder med antallet af tilgængelige ressourcer i vores superskalar maskine. Vi kan tælle faserne i søjlerne og alt er korrekt. Dog husker vi nu reglen for <code>inorder(F,D,X,M,W)</code>, som vi glemt at tage med. For at tjekke den skal vi sikre at faserne i hver søjle er ordnet modsat oppefra og ned. Dette er oplagt ikke tilfældet i clock periode 4 og 5 hvor vi jo ser det to instruktioner har overhalet.</p>
+<p>Så for er sikre <code>inorder(F,D,X,M,W)</code> er vi nødt til at have:</p>
+<pre><code>                 012345678     -- Bemærkning
+movq (r10),r11   F--XM-W       -- produce(W,r11)
+addq $100,r11    F-----XW      -- depend(X,r11), stall F til r11 er klar
+movq r9,(r14)     F----XM      -- ingen afhængighed, men stall i F for inorder
+addq $1,r10       F-----XW     -- ingen afhængighed, men stall i F
 </code></pre>
 
-<p>Vi kan ane at der findes mere ydeevne i form af mere parallelisme i udførelsen, hvis vi
-blot kan afvige fra inorder-kravet i en eller flere faser.</p>
+<p>Vi kan for dette eksempel kun spare en enkelt clock periode, men vi kan ane at der findes meget mere ydeevne i form af mere parallelisme i udførelsen, hvis vi blot kan afvige fra inorder-kravet i en eller flere faser.</p>
 <p>Det har man gjort for "special cases" i mange maskiner gennem årene, men de sidste 20 år er der
 etableret en mere generel "standard model" for out-of-order maskiner</p>
 <h2 id="standardmodellen-for-out-of-order-mikroarkitektur">Standardmodellen for out-of-order mikroarkitektur</h2>
 <h3 id="inorder-og-out-of-order">Inorder og out-of-order</h3>
-<p>I denne model passerer instruktioner først i programrækkefølge gennem en pipeline hvor de ender i
+<p>I denne model passerer instruktioner først i programrækkefølge gennem en indhentnings-pipeline til de ender i
 en skeduleringsenhed (scheduler). Derfra kan de udføres uden at overholde programrækkefølgen.
 Efter udførsel placeres resultaterne i en form for kø. Resultaterne udtages fra denne kø og fuldføres
-i programrækkefølge. Det gælder såvel for skrivninger til registre, som for skrivninger til lageret.</p>
-<p>Vi kan beskrive det ved følgende faser der er fælles for alle instruktioner:
-<em> F: Start på instruktionshentning
-</em> Q: Ankomst til scheduler
-* C: Fuldførelse</p>
+igen i programrækkefølge. Det gælder såvel for skrivninger til registre, som for skrivninger til lageret.</p>
+<p>Vi kan beskrive det ved følgende faser der er fælles for alle instruktioner:</p>
+<ul>
+<li><code>F</code>: Start på instruktionsindhentning</li>
+<li><code>Q</code>: Ankomst til scheduler</li>
+<li><code>C</code>: Fuldførelse</li>
+</ul>
 <p>Og vi benytter lejligheden til at fjerne <code>W</code> trinnet fra beskrivelsen.</p>
 <h3 id="lagerreferencer">Lagerreferencer</h3>
 <p>I de hidtil beskrevne maskiner bruger både lagerreferencer og aritmetiske
@@ -185,19 +246,19 @@ er beregnet. Det tidspunkt hvor værdien kopieres til skrive-køen markeres <cod
 <td>Aritmetik</td>
 <td><code>op  a b</code></td>
 <td><code>F----QXC</code></td>
-<td><code>depend(X,a), depend(X,b), produce(C,b)</code></td>
+<td><code>depend(X,a), depend(X,b), produce(X,b)</code></td>
 </tr>
 <tr>
 <td>Læsning</td>
 <td><code>movq (a),b</code></td>
 <td><code>F----QAM--C</code></td>
-<td><code>depend(A,a), produce(C,b)</code></td>
+<td><code>depend(A,a), produce(M+2,b)</code></td>
 </tr>
 <tr>
 <td>Skrivning</td>
 <td><code>movq b,(a)</code></td>
 <td><code>F----QAMVC</code></td>
-<td><code>depend(A,a), depend(M,b), produce(V,a)</code></td>
+<td><code>depend(A,a), depend(M,b), produce(M,a)</code></td>
 </tr>
 </tbody>
 </table>
@@ -207,24 +268,24 @@ er beregnet. Det tidspunkt hvor værdien kopieres til skrive-køen markeres <cod
 <li><code>inorder(F,Q,C,A)</code></li>
 <li><code>outoforder(X,M)</code></li>
 </ul>
-<p>Bemærk at udover at faserne X og M nu er erklæret out-of-order, så er
-der indsat en begrænsning på 32 instruktioner fra Q til C. Det vil sige
-vi tillader 32 instruktioner at være i forskellige faser mellem Q og C.
+<p>Bemærk at udover at faserne <code>X</code> og <code>M</code> nu er erklæret out-of-order, så er
+der indsat en begrænsning på 32 instruktioner fra <code>Q</code> til <code>C</code>. Det vil sige
+vi tillader 32 instruktioner at være i forskellige faser mellem <code>Q</code> og <code>C</code>.
 Dette kaldes skeduleringsvinduet. Jo større det er, jo flere instruktioner
 kan maskinen "se fremad" i instruktionsstrømmen.</p>
 <p>Bemærk også at til forskel fra alle de tidligere maskiner er der ikke
-længere noget krav om X skal følge i en bestemt afstand efter Q, eller
-at C skal følge i en bestemt afstand efter X eller M.</p>
+længere noget krav om <code>X</code> skal følge i en bestemt afstand efter <code>Q</code>, eller
+at <code>C</code> skal følge i en bestemt afstand efter <code>X</code> eller <code>M</code>.</p>
 <p>Disse begrænsninger ville give følgende udførelse</p>
 <pre><code>                 012345678901234      -- Vigtigste bemærkninger
-movq (r10),r11   F----QAM--C          -- produce(C,r11)
-addq $100,r11    F----Q----XC         -- depend(X,r11), produce(C,r11) 
+movq (r10),r11   F----QAM--C          -- produce(M+2,r11)
+addq $100,r11    F----Q----XC         -- depend(X,r11), produce(X,r11)
 movq r11,(r10)    F----QAM--VC        -- depend(A,r10), depend(M,r11)
-addq $8,r10       F----QX----C        -- produce(C,r10)
-movq (r10),r11     F----QAM---C       -- depend(A,r10), produce(C,r11)
-addq $100,r11      F----Q----XC       -- depend(X,r11), produce(C,r11)
+addq $8,r10       F----QX----C        -- produce(X,r10)
+movq (r10),r11     F----QAM---C       -- depend(A,r10), produce(M+2,r11)
+addq $100,r11      F----Q----XC       -- depend(X,r11), produce(X,r11)
 movq r11,(r10)      F----QAM--VC      -- depend(A,r10), depend(M,r11)
-addq $8,r10         F----QX----C      -- depend(X,r10), produce(C,r10)
+addq $8,r10         F----QX----C      -- depend(X,r10), produce(X,r10)
 </code></pre>
 
 <p>Med en gennemsnitlig ydeevne på 2 IPC.</p>
@@ -233,6 +294,13 @@ addq $8,r10         F----QX----C      -- depend(X,r10), produce(C,r10)
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../anonyme/" class="btn btn-neutral" title="Avanceret pipeline, anonyme faser"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -255,6 +323,8 @@ addq $8,r10         F----QX----C      -- depend(X,r10), produce(C,r10)
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
+      
+        <span><a href="../anonyme/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
     </span>
